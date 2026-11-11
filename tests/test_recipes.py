@@ -283,3 +283,49 @@ def test_model_chemistry_options(tmp_path):
     assert options["SEAMM:CMP@mine"]["recipe_source"] == "job"
     assert CompositeStep.get_model_chemistry_options(periodic_only=True) == {}
     assert CompositeStep.get_model_chemistry_options(mdi_only=True) == {}
+
+
+@pytest.mark.parametrize(
+    "combine, message",
+    [
+        ("E0 = geometry * geometry\n", "scales as energy\\^2"),
+        ("E0 = geometry + 1\n", "different kinds"),
+        ("x = geometry / geometry\nE0 = x\n", "scales as energy\\^0"),
+        (
+            "E0 = scale(geometry, geometry)\n",
+            "argument 2 of scale\\(\\) must be a number",
+        ),
+        ("E0 = scale(0.5, geometry)\n", "argument 1 of scale\\(\\) must be an energy"),
+    ],
+)
+def test_nonlinear_combinations_are_refused(combine, message):
+    """Every result must scale like an energy, so a combination gives the same
+    answer in any unit (kJ/mol, E_h)."""
+    with pytest.raises(R.RecipeError, match=message):
+        recipe(combine=combine)
+
+
+def test_unit_invariance_of_allowed_forms():
+    """Ratios of energy differences are numbers (degree 0), so forms that fit an
+    exponent from them, like Feller's three-point extrapolation, are allowed and
+    give the same result in E_h and in kJ/mol."""
+    r = recipe(
+        components={
+            "dz": {"method": "HF", "basis": "cc-pVDZ"},
+            "tz": {"method": "HF", "basis": "cc-pVTZ"},
+            "qz": {"method": "HF", "basis": "cc-pVQZ"},
+        },
+        combine=("E0 = (tz * tz - dz * qz) / (2 * tz - dz - qz)\n"),
+    )
+    e = {"dz": -76.0267, "tz": -76.0571, "qz": -76.0653, "geometry": -76.1}
+    k = 2625.4996394798254
+    in_hartree = r.combine(e)["E0"]
+    in_kj = r.combine({n: v * k for n, v in e.items()})["E0"]
+    assert in_kj == pytest.approx(in_hartree * k, rel=1e-12)
+    # and it is Feller's limit: E(n) = E + B exp(-C n) exactly
+    import math
+
+    E, B, C = -76.0675, 0.9, 1.4
+    exact = {f: E + B * math.exp(-C * n) for f, n in (("dz", 2), ("tz", 3), ("qz", 4))}
+    exact["geometry"] = 0.0
+    assert r.combine(exact)["E0"] == pytest.approx(E, abs=1e-10)

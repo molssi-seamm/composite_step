@@ -11,15 +11,17 @@ The result is itself a model chemistry, ``SEAMM:CMP@<recipe>``.
 This module has no GUI and no SEAMM flowchart dependencies, so it can be used and
 tested on its own. See ``NOTES_composite_methods.md`` (the design) for the reasons.
 
-Units: every energy a recipe combines is in hartree (E_h), and so are its results.
-The thermal terms are combined in whatever units the caller gives them, as long as
-they are all the same.
+Units: a recipe's empirical constants are in hartree (E_h). Every result of
+``combine`` must scale like an energy (degree 1 in the energies; checked when the
+recipe is read), so the components may be combined in any one unit, E_h or kJ/mol,
+with the constants in the same unit. The thermal terms likewise.
 """
 
 import ast
 import copy
 from dataclasses import dataclass, field
 import hashlib
+import inspect
 import json
 import logging
 import math
@@ -151,6 +153,20 @@ FUNCTIONS = {
     "hf_extrapolate_exp": (hf_extrapolate_exp, 4, 4),
     "schwenke": (schwenke, 3, 3),
     "scale": (scale, 2, 2),
+}
+#: The degree of each function's arguments and result in the energies: 1 for an
+#: energy, 0 for a pure number (a cardinal number, an exponent, a factor). Every
+#: function is homogeneous of degree 1 in its energy arguments, so a combination
+#: gives the same result in any energy unit. A new function must be too: a fitted
+#: exponent, for example, enters only through a ratio of energy differences
+#: (degree 0), as in Feller's three-point form.
+DEGREES = {
+    "cbs_power": ((1, 1, 0, 0, 0), 1),
+    "hf_extrapolate_exp": ((1, 1, 0, 0), 1),
+    "schwenke": ((1, 1, 0), 1),
+    "scale": ((1, 0), 1),
+    "hf_part": ((1,), 1),
+    "corr_part": ((1,), 1),
 }
 #: Functions of a component itself, not of its energy.
 PART_FUNCTIONS = {"hf_part", "corr_part"}
@@ -496,6 +512,8 @@ def validate(data):
     statements = parse_combine(data["combine"])
     known = set(components) | {GEOMETRY} | set(empirical)
     defined = set()
+    # Energies (components, the geometry level, empirical terms) have degree 1
+    degrees = {name: 1 for name in known}
     for target, node in statements:
         if target in known:
             raise RecipeError(f"'combine' redefines '{target}'")
@@ -506,9 +524,17 @@ def validate(data):
                 f"'combine' line for '{target}' uses unknown names: "
                 + ", ".join(sorted(undefined))
             )
+        degrees[target] = _degree(node, degrees, target)
         defined.add(target)
     if "E0" not in defined:
         raise RecipeError("'combine' must define E0")
+    for target, _ in statements:
+        if degrees[target] != 1:
+            raise RecipeError(
+                f"'combine': '{target}' is not an energy (it scales as energy^"
+                f"{degrees[target]}); every result must scale like an energy, so "
+                "that it is the same in any unit"
+            )
 
     requires = data.get("requires") or []
     if not isinstance(requires, list) or not all(isinstance(r, str) for r in requires):
@@ -532,6 +558,67 @@ def _check_level(what, level, allow_scale=False):
             )
     elif "method" not in level:
         raise RecipeError(f"The {what} needs 'level', or 'method' (and 'basis')")
+
+
+def _degree(node, degrees, target):
+    """The degree of an expression in the energies (energy^d), or a RecipeError
+    when it has none: a sum of an energy and a number, a function given an
+    argument of the wrong kind."""
+
+    def fail(why):
+        raise RecipeError(f"'combine' line for '{target}': {why}")
+
+    def deg(n):
+        if isinstance(n, ast.Constant):
+            return 0
+        if isinstance(n, ast.Name):
+            return degrees[n.id]
+        if isinstance(n, ast.UnaryOp):
+            return deg(n.operand)
+        if isinstance(n, ast.BinOp):
+            left, right = deg(n.left), deg(n.right)
+            if isinstance(n.op, (ast.Add, ast.Sub)):
+                if left != right:
+                    fail(
+                        "adds or subtracts quantities of different kinds (an energy "
+                        "and a number, or an energy and a product of energies)"
+                    )
+                return left
+            if isinstance(n.op, ast.Mult):
+                return left + right
+            return left - right  # Div
+        if isinstance(n, ast.Call):
+            name = n.func.id
+            wanted, result = DEGREES[name]
+            given = [deg(a) for a in n.args]
+            keywords = (
+                list(inspect.signature(FUNCTIONS[name][0]).parameters)
+                if name in FUNCTIONS
+                else []
+            )
+            for kw in n.keywords:
+                given.append(
+                    (
+                        keywords.index(kw.arg) if kw.arg in keywords else None,
+                        deg(kw.value),
+                    )
+                )
+            positional = [g for g in given if not isinstance(g, tuple)]
+            for i, d in enumerate(positional):
+                if d != wanted[i]:
+                    fail(
+                        f"argument {i + 1} of {name}() must be "
+                        + ("an energy" if wanted[i] == 1 else "a number")
+                    )
+            for g in given:
+                if isinstance(g, tuple):
+                    i, d = g
+                    if i is None or d != wanted[i]:
+                        fail(f"a keyword argument of {name}() is of the wrong kind")
+            return result
+        fail(f"cannot find the degree of {type(n).__name__}")
+
+    return deg(node)
 
 
 def load_recipe(path, source="shipped"):

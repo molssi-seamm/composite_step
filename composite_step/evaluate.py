@@ -10,10 +10,11 @@ component's result is the code's ordinary result with its ordinary calculation
 record and settings fingerprint, so the fragment store finds and keeps components,
 never composites, and a component shared by two recipes is computed once.
 
-Energies are combined in kJ/mol, as the Evaluator returns them. Every function of
-the ``combine`` language is linear in the energies, so the units do not matter
-except for the empirical constants, which recipes give in E_h and which are
-converted here. A recipe of one component therefore gives exactly that
+Energies are combined in kJ/mol, as the Evaluator returns them. Every result of a
+``combine`` block scales like an energy (homogeneous of degree 1 in the energies,
+checked when the recipe is read: see :data:`composite_step.recipes.DEGREES`), so
+the result is the same in any unit; only the empirical constants, which recipes
+give in E_h, are converted here. A recipe of one component therefore gives exactly that
 component's energy, with no unit conversion of it.
 """
 
