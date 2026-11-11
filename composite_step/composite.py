@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Non-graphical part of the Composite step in a SEAMM flowchart
-"""
+"""Non-graphical part of the Composite step in a SEAMM flowchart"""
 
 import logging
 from pathlib import Path
@@ -60,11 +59,7 @@ class Composite(seamm.Node):
     """
 
     def __init__(
-        self,
-        flowchart=None,
-        title="Composite",
-        extension=None,
-        logger=logger
+        self, flowchart=None, title="Composite", extension=None, logger=logger
     ):
         """A step for Composite in a SEAMM flowchart.
 

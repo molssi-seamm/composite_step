@@ -1,0 +1,25 @@
+recipe: thermo-default
+version: 1
+description: >-
+  The thermochemistry step's 'default' tier: r2SCAN-3c geometry and frequencies
+  (ZPE scaled), and the revDSD-PBEP86-D4(2021)/def2-TZVPP energy at that
+  geometry.
+reference: >-
+  Grimme, Hansen, Ehlert, Mewes, J. Chem. Phys. 154, 064103 (2021);
+  Santra, Sylvetsky, Martin, J. Phys. Chem. A 123, 5129 (2019)
+doi: 10.1063/5.0040021
+
+geometry:
+  level: ORCA:CMP@R2SCAN-3C
+frequencies:
+  scale_zpe: 0.9899
+  scale_source: >-
+    fitted to the anharmonic ZPVEs of 22 W4-2006 molecules (SEAMM, 2026-11);
+    seamm_thermochemistry's ZPE table for R2SCAN-3C
+
+components:
+  revdsd:
+    level: ORCA:DFT@REVDSD-PBEP86-D4_2021/def2-TZVPP
+
+combine: |
+  E0 = revdsd
