@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import logging
+from pathlib import Path
+
 import composite_step
+
+logger = logging.getLogger(__name__)
 
 
 class CompositeStep(object):
@@ -43,6 +48,58 @@ class CompositeStep(object):
         and create node objects for the flowchart
         """
         pass
+
+    @classmethod
+    def get_model_chemistry_options(
+        cls, periodic_only=False, mdi_only=False, data_path=None
+    ):
+        """The composite methods SEAMM provides: ``SEAMM:CMP@<recipe>`` for the
+        newest version of each recipe found.
+
+        The recipes are the shipped set plus those in a ``recipes/`` directory of
+        each ``data_path`` entry (a job's data, the user's). Composites are
+        molecular and have no MDI engine or gradients yet, so a periodic-only or
+        MDI-only request gets nothing.
+
+        Whether the codes for a recipe's components are installed is not checked
+        here: that needs the other steps' model chemistries, and asking for them
+        from inside model-chemistry discovery would recurse. The step checks it
+        before it runs anything (:func:`composite_step.recipes.check_capabilities`).
+        """
+        from .recipes import RecipeLibrary
+
+        if periodic_only or mdi_only:
+            return {}
+        extra = []
+        for directory in data_path or ():
+            extra.append(Path(directory) / "recipes")
+        library = RecipeLibrary(extra_directories=extra)
+        for problem in library.problems:
+            logger.warning("Composite recipes: %s", problem)
+        options = {}
+        for name in library.names():
+            recipe = library.get(name)
+            scale, source = recipe.zpe_scale
+            options[recipe.model_chemistry] = {
+                "model_chemistry": recipe.model_chemistry,
+                "type": "CMP",
+                "method": recipe.name,
+                "basis": None,
+                "description": recipe.description or recipe.name,
+                "periodic": False,
+                "mdi_capable": False,
+                "analytic_hessian": False,
+                "parallel_tasks": True,
+                "prefers_batch": True,
+                "recipe": recipe.name,
+                "recipe_version": recipe.version,
+                "recipe_source": recipe.source,
+                "geometry_level": recipe.geometry.get("level"),
+                "components": {k: v.get("level") for k, v in recipe.components.items()},
+                "zpe_scale": scale,
+                "zpe_scale_source": source,
+            }
+        return options
 
     def create_node(self, flowchart=None, **kwargs):
         """Create and return the new node object.

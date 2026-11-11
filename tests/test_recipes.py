@@ -252,3 +252,32 @@ def test_fingerprint():
     assert a.fingerprint() != c.fingerprint()
     assert a.fingerprint({"x": "sha256:1"}) != a.fingerprint()
     assert a.fingerprint().startswith("sha256:")
+
+
+def test_capabilities_with_a_matcher():
+    r = R.RecipeLibrary().get("thermo-default")
+    assert R.check_capabilities(r, lambda spec: spec.startswith("ORCA:")) == []
+    assert len(R.check_capabilities(r, lambda spec: "CMP" in spec)) == 1
+
+
+def test_model_chemistry_options(tmp_path):
+    from composite_step import CompositeStep
+
+    (tmp_path / "recipes").mkdir()
+    write(tmp_path / "recipes", "mine.yaml", LOCAL.format(name="mine", version=2))
+    options = CompositeStep.get_model_chemistry_options(data_path=[tmp_path])
+    assert {
+        "SEAMM:CMP@thermo-quick",
+        "SEAMM:CMP@thermo-default",
+        "SEAMM:CMP@mine",
+    } <= set(options)
+    default = options["SEAMM:CMP@thermo-default"]
+    assert default["type"] == "CMP" and default["basis"] is None
+    assert default["geometry_level"] == "ORCA:CMP@R2SCAN-3C"
+    assert default["components"] == {
+        "revdsd": "ORCA:DFT@REVDSD-PBEP86-D4_2021/def2-TZVPP"
+    }
+    assert default["zpe_scale"] == 0.9899
+    assert options["SEAMM:CMP@mine"]["recipe_source"] == "job"
+    assert CompositeStep.get_model_chemistry_options(periodic_only=True) == {}
+    assert CompositeStep.get_model_chemistry_options(mdi_only=True) == {}

@@ -631,23 +631,31 @@ def check_capabilities(recipe, available_levels=None, capabilities=None):
     Parameters
     ----------
     recipe : Recipe
-    available_levels : collection of str, optional
+    available_levels : collection of str, or callable, optional
         The model chemistries available (e.g. the keys of
-        ``discover_model_chemistries()``). Every ``level`` the recipe names must
-        be among them (compared case-insensitively).
+        ``discover_model_chemistries()``), compared case-insensitively; or a
+        function of a level spec returning whether it is available (e.g. one
+        using ``match_model_chemistry``, which lets the basis be any).
     capabilities : collection of str, optional
         What the code offers for the recipe's ``requires`` list, as the same
         strings (``CCSD(T)``, ``basis:cc-pVTZ-F12``, ``F12/RI``, ...).
     """
     missing = []
     if available_levels is not None:
-        have = {str(x).lower() for x in available_levels}
+        if callable(available_levels):
+            is_available = available_levels
+        else:
+            have = {str(x).lower() for x in available_levels}
+
+            def is_available(spec):
+                return spec.lower() in have
+
         levels = [("geometry", recipe.geometry)] + [
             (f"component '{k}'", v) for k, v in recipe.components.items()
         ]
         for what, level in levels:
             spec = level.get("level")
-            if spec is not None and spec.lower() not in have:
+            if spec is not None and not is_available(spec):
                 missing.append(f"{what}: the model chemistry {spec}")
     if capabilities is not None:
         have = {str(x).lower() for x in capabilities}
