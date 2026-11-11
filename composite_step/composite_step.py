@@ -101,6 +101,52 @@ class CompositeStep(object):
             }
         return options
 
+    @classmethod
+    def can_run_task(cls, configuration, model_chemistry, **kwargs):
+        """Whether one task per structure can compute this composite: only when
+        E0 depends on one energy (the component's own task), for a molecule."""
+        from .evaluate import delegate
+        from .recipes import RecipeError
+
+        if int(getattr(configuration, "periodicity", 0) or 0) != 0:
+            return False
+        try:
+            _, _, mc, provider = delegate(model_chemistry)
+        except RecipeError:
+            return False
+        check = getattr(provider, "can_run_task", None)
+        return True if check is None else check(configuration, mc, **kwargs)
+
+    @classmethod
+    def get_task(cls, configuration, model_chemistry, **kwargs):
+        """The task of a one-energy recipe: its component's task. A recipe that
+        combines several calculations runs through
+        :func:`composite_step.evaluate.evaluate_recipe` instead."""
+        from .evaluate import delegated_get_task
+
+        return delegated_get_task(configuration, model_chemistry, **kwargs)
+
+    @classmethod
+    def analyze_task(cls, result, model_chemistry, configuration, **kwargs):
+        """The component's results with the energy replaced by the recipe's E0
+        (kJ/mol), and the composite described under ``composite``."""
+        from .evaluate import delegated_analyze_task
+
+        return delegated_analyze_task(result, model_chemistry, configuration, **kwargs)
+
+    @classmethod
+    def expected_fingerprints(cls, configuration, model_chemistry, **kwargs):
+        """The component's own expected fingerprints, for a one-energy recipe."""
+        from .evaluate import delegate
+        from .recipes import RecipeError
+
+        try:
+            _, _, mc, provider = delegate(model_chemistry)
+        except RecipeError:
+            return None
+        predict = getattr(provider, "expected_fingerprints", None)
+        return None if predict is None else predict(configuration, mc, **kwargs)
+
     def create_node(self, flowchart=None, **kwargs):
         """Create and return the new node object.
 

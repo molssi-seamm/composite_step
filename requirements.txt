@@ -2,3 +2,6 @@ seamm
 seamm-util
 seamm-widgets
 pyyaml
+seamm-exec
+model-chemistry-step
+stevedore
