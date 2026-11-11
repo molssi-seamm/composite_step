@@ -12,12 +12,14 @@ Done
   name and version; the capability check; fingerprints (the descriptive fields
   left out); and the thermal terms, H0 = E0 + s ZPE and H = E0 + s ZPE +
   [H - E - ZPE] at the frequency level.
-- The recipes ``thermo-quick`` (r2SCAN-3c) and ``thermo-default`` (r2SCAN-3c //
-  revDSD-PBEP86-D4(2021)/def2-TZVPP), ZPE x 0.9899 pinned with its source. Tests
+- The recipes ``r2SCAN-3c-HO`` (r2SCAN-3c) and ``revDSD-r2SCAN-3c-HO`` (r2SCAN-3c //
+  revDSD-PBEP86-D4(2021)/def2-TZVPP), ZPE x 0.9899 pinned with its source; HO =
+  the scaled harmonic thermal terms. They are what the thermochemistry step's
+  quick and default presets run today. Tests
   check that the factor is still seamm_thermochemistry's, and that the recipes
-  reproduce the thermochemistry step's arithmetic bit for bit. The names may
-  change (science suggests naming by content: ``r2SCAN-3c-HO``,
-  ``revDSD-r2SCAN-3c-HO``); Paul decides.
+  reproduce the thermochemistry step's arithmetic bit for bit. Recipes are named by
+  their content, not by a preset's role (Paul, 2026-11-11), so a stored result's
+  label stays true when the presets move on.
 - ``CompositeStep.get_model_chemistry_options``: ``SEAMM:CMP@<recipe>`` for the
   newest version of each recipe, with its geometry level, components and ZPE
   factor in the option. Whether the components' codes are installed is not
@@ -35,7 +37,7 @@ structures at once, through the component's own model chemistry; the composite
 then combines the energies per structure. This needs no change to seamm_exec, and
 it keeps every component an ordinary calculation with its ordinary settings
 fingerprint, so the fragment store finds and stores components, never composites
-(design §6), and a recipe's component of ``thermo-default`` is exactly the
+(design §6), and the component of ``revDSD-r2SCAN-3c-HO`` is exactly the
 default preset's energy level (science's pass criterion (a)).
 
 A later change can let the Evaluator take several tasks per structure from one

@@ -34,9 +34,9 @@ def recipe(**changes):
 def test_shipped_recipes_load():
     library = R.RecipeLibrary()
     assert library.problems == []
-    assert {"thermo-quick", "thermo-default"} <= set(library.names())
-    default = library.get("thermo-default")
-    assert default.model_chemistry == "SEAMM:CMP@thermo-default"
+    assert {"r2SCAN-3c-HO", "revDSD-r2SCAN-3c-HO"} <= set(library.names())
+    default = library.get("revDSD-r2SCAN-3c-HO")
+    assert default.model_chemistry == "SEAMM:CMP@revDSD-r2SCAN-3c-HO"
     assert default.geometry == {"level": "ORCA:CMP@R2SCAN-3C"}
     assert default.components["revdsd"]["level"] == (
         "ORCA:DFT@REVDSD-PBEP86-D4_2021/def2-TZVPP"
@@ -48,7 +48,7 @@ def test_shipped_zpe_factor_is_the_tables():
     takes from seamm_thermochemistry's table today."""
     thermo = pytest.importorskip("seamm_thermochemistry")
     table = thermo.zpe_scale_factor("ORCA:CMP@R2SCAN-3C")
-    for name in ("thermo-quick", "thermo-default"):
+    for name in ("r2SCAN-3c-HO", "revDSD-r2SCAN-3c-HO"):
         s, source = R.RecipeLibrary().get(name).zpe_scale
         assert s == table.factor
         assert table.source in source
@@ -68,7 +68,7 @@ def _step_arithmetic(E_high, low, s):
     return combined
 
 
-@pytest.mark.parametrize("name", ["thermo-quick", "thermo-default"])
+@pytest.mark.parametrize("name", ["r2SCAN-3c-HO", "revDSD-r2SCAN-3c-HO"])
 def test_tiers_reproduce_the_step_bitwise(name):
     r = R.RecipeLibrary().get(name)
     s, _ = r.zpe_scale
@@ -78,7 +78,9 @@ def test_tiers_reproduce_the_step_bitwise(name):
     components = {"geometry": low["E"], "revdsd": E_revdsd}
     E0 = r.combine(components)["E0"]
     got = r.thermal(E0, {"E": low["E"], "ZPE": low["ZPE"], "H": low["H298"]})
-    want = _step_arithmetic(E_revdsd if name == "thermo-default" else low["E"], low, s)
+    want = _step_arithmetic(
+        E_revdsd if name == "revDSD-r2SCAN-3c-HO" else low["E"], low, s
+    )
     assert got["H0"] == want["H0"]
     assert got["H"] == want["H298"]
     assert got["ZPE scaled"] == s * low["ZPE"]
@@ -210,13 +212,13 @@ combine: |
 
 
 def test_local_recipe_may_not_shadow_a_shipped_one(tmp_path):
-    write(tmp_path, "a.yaml", LOCAL.format(name="thermo-quick", version=1))
-    write(tmp_path, "b.yaml", LOCAL.format(name="thermo-quick", version=7))
+    write(tmp_path, "a.yaml", LOCAL.format(name="r2SCAN-3c-HO", version=1))
+    write(tmp_path, "b.yaml", LOCAL.format(name="r2SCAN-3c-HO", version=7))
     write(tmp_path, "c.yaml", LOCAL.format(name="mine", version=1))
     write(tmp_path, "d.yaml", "recipe: [broken\n")
     library = R.RecipeLibrary(user_directory=tmp_path)
-    assert library.get("thermo-quick", 1).source == "shipped"
-    assert library.get("thermo-quick").version == 7  # the newest
+    assert library.get("r2SCAN-3c-HO", 1).source == "shipped"
+    assert library.get("r2SCAN-3c-HO").version == 7  # the newest
     assert library.get("mine").source == "user"
     assert len(library.problems) == 2
     assert any("already defined" in p for p in library.problems)
@@ -231,7 +233,7 @@ def test_local_recipe_may_not_shadow_a_shipped_one(tmp_path):
 
 
 def test_capabilities():
-    r = R.RecipeLibrary().get("thermo-default")
+    r = R.RecipeLibrary().get("revDSD-r2SCAN-3c-HO")
     assert r.requires == []
     have = ["ORCA:CMP@R2SCAN-3C", "orca:dft@revdsd-pbep86-d4_2021/def2-tzvpp"]
     assert R.check_capabilities(r, have) == []
@@ -255,7 +257,7 @@ def test_fingerprint():
 
 
 def test_capabilities_with_a_matcher():
-    r = R.RecipeLibrary().get("thermo-default")
+    r = R.RecipeLibrary().get("revDSD-r2SCAN-3c-HO")
     assert R.check_capabilities(r, lambda spec: spec.startswith("ORCA:")) == []
     assert len(R.check_capabilities(r, lambda spec: "CMP" in spec)) == 1
 
@@ -267,11 +269,11 @@ def test_model_chemistry_options(tmp_path):
     write(tmp_path / "recipes", "mine.yaml", LOCAL.format(name="mine", version=2))
     options = CompositeStep.get_model_chemistry_options(data_path=[tmp_path])
     assert {
-        "SEAMM:CMP@thermo-quick",
-        "SEAMM:CMP@thermo-default",
+        "SEAMM:CMP@r2SCAN-3c-HO",
+        "SEAMM:CMP@revDSD-r2SCAN-3c-HO",
         "SEAMM:CMP@mine",
     } <= set(options)
-    default = options["SEAMM:CMP@thermo-default"]
+    default = options["SEAMM:CMP@revDSD-r2SCAN-3c-HO"]
     assert default["type"] == "CMP" and default["basis"] is None
     assert default["geometry_level"] == "ORCA:CMP@R2SCAN-3C"
     assert default["components"] == {

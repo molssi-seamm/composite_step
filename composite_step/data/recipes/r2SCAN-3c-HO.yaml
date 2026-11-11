@@ -1,8 +1,9 @@
-recipe: thermo-quick
+recipe: r2SCAN-3c-HO
 version: 1
 description: >-
-  The thermochemistry step's 'quick' tier: r2SCAN-3c geometry, frequencies and
-  energy (ORCA's own r2SCAN-3c composite), with the ZPE scaled.
+  r2SCAN-3c geometry, frequencies and energy (ORCA's own r2SCAN-3c composite),
+  with the ZPE scaled; HO = scaled harmonic thermal terms. The thermochemistry
+  step's 'quick' preset in 2026-11.
 reference: Grimme, Hansen, Ehlert, Mewes, J. Chem. Phys. 154, 064103 (2021)
 doi: 10.1063/5.0040021
 

@@ -1,9 +1,9 @@
-recipe: thermo-default
+recipe: revDSD-r2SCAN-3c-HO
 version: 1
 description: >-
-  The thermochemistry step's 'default' tier: r2SCAN-3c geometry and frequencies
-  (ZPE scaled), and the revDSD-PBEP86-D4(2021)/def2-TZVPP energy at that
-  geometry.
+  r2SCAN-3c geometry and frequencies (ZPE scaled), and the
+  revDSD-PBEP86-D4(2021)/def2-TZVPP energy at that geometry; HO = scaled
+  harmonic thermal terms. The thermochemistry step's 'default' preset in 2026-11.
 reference: >-
   Grimme, Hansen, Ehlert, Mewes, J. Chem. Phys. 154, 064103 (2021);
   Santra, Sylvetsky, Martin, J. Phys. Chem. A 123, 5129 (2019)
