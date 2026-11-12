@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>composite_step.composite_step &#8212; SEAMM Composite Plug-in 2026.11.11 documentation</title>
+    <title>composite_step.composite_step &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="../../_static/documentation_options.js?v=b41936cd"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.12" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -586,11 +586,13 @@
                 <span class="s2">"periodic"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="s2">"mdi_capable"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="s2">"analytic_hessian"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">"properties"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"energy"</span><span class="p">],</span>
                 <span class="s2">"parallel_tasks"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                 <span class="s2">"prefers_batch"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                 <span class="s2">"recipe"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                 <span class="s2">"recipe_version"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
                 <span class="s2">"recipe_source"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                <span class="s2">"recipe_path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">recipe</span><span class="o">.</span><span class="n">path</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="s2">"geometry_level"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">),</span>
                 <span class="s2">"components"</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">recipe</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
                 <span class="s2">"zpe_scale"</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
@@ -645,16 +647,52 @@
 <a class="viewcode-back" href="../../api/composite_step.html#composite_step.composite_step.CompositeStep.expected_fingerprints">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_fingerprints</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""The component's own expected fingerprints, for a one-energy recipe."""</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">delegate</span>
+<span class="w">        </span><span class="sd">"""For a one-energy recipe, the fingerprints of the composite record its</span>
+<span class="sd">        result carries (:func:`composite_step.evaluate.composite_record`), one for</span>
+<span class="sd">        each fingerprint the component's program predicts. None for a recipe that</span>
+<span class="sd">        combines several calculations: those are stored as their components."""</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">composite_record</span><span class="p">,</span> <span class="n">delegate</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.recipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecipeError</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">provider</span> <span class="o">=</span> <span class="n">delegate</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
+            <span class="n">recipe</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">provider</span> <span class="o">=</span> <span class="n">delegate</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">RecipeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">predict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="s2">"expected_fingerprints"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">predict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">predict</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">predict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">predicted</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">predicted</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">composite_record</span><span class="p">(</span>
+                <span class="n">recipe</span><span class="p">,</span>
+                <span class="n">model_chemistry</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="n">source</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"record"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"fingerprint"</span><span class="p">:</span> <span class="n">fp</span><span class="p">},</span>
+                        <span class="s2">"model_chemistry"</span><span class="p">:</span> <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">],</span>
+                    <span class="p">}</span>
+                <span class="p">},</span>
+            <span class="p">)[</span><span class="s2">"fingerprint"</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">predicted</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CompositeStep.make_evaluator">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.composite_step.CompositeStep.make_evaluator">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_evaluator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The evaluator for a recipe that combines several calculations</span>
+<span class="sd">        (:class:`composite_step.evaluate.CompositeEvaluator`), which</span>
+<span class="sd">        ``seamm_exec.Evaluator(...)`` returns in its place; None for a one-energy</span>
+<span class="sd">        recipe, which runs as its component's own tasks."""</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompositeEvaluator</span><span class="p">,</span> <span class="n">_recipe_of</span><span class="p">,</span> <span class="n">single_source</span>
+
+        <span class="n">recipe</span> <span class="o">=</span> <span class="n">_recipe_of</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">"data_path"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">single_source</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">CompositeEvaluator</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">recipe</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CompositeStep.create_node">

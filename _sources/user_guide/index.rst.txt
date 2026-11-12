@@ -122,12 +122,24 @@ your own may not reuse the name and version of a shipped one.
 What is not there yet
 =====================
 
-Each component needs a complete ``level``; choosing the code from a method and a
-basis set is not implemented yet. ``hf_part`` and ``corr_part`` need the HF part
-of a component, which the codes do not return yet. A recipe whose energy comes from one
-calculation runs anywhere a model chemistry is used; a recipe that combines
-several runs through the steps that use ``composite_step.evaluate.evaluate_recipe``,
-such as Thermochemistry. Gradients of composite methods are not available.
+A recipe runs anywhere a model chemistry is used: the Energy step, the
+Thermochemistry step's CBH approach, and the others. A recipe that combines several
+calculations runs each component as one batch of its own program over all the
+structures, the cheapest components first. A structure that fails one component is
+not sent to the later ones, and its result names the component that failed. Each
+result carries the composite record: the recipe's fingerprint together with every
+component's settings fingerprint.
+
+Not there yet:
+
+* Each component needs a complete ``level``; choosing the code from a method and a
+  basis set is not implemented yet.
+* ``hf_part`` and ``corr_part`` need the HF part of a component, which the codes do
+  not return yet.
+* Empirical terms that depend on the structure (higher-level corrections,
+  spin-orbit tables) are not implemented; a recipe that needs them is refused.
+* Composite methods give energies only: no gradients, so they cannot be used to
+  optimize structures or by steps that need forces.
 
 Indices and tables
 ==================

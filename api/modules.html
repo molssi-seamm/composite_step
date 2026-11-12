@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>composite_step &#8212; SEAMM Composite Plug-in 2026.11.11 documentation</title>
+    <title>composite_step &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="../_static/documentation_options.js?v=b41936cd"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.12" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -556,12 +556,24 @@
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.composite_step.CompositeStep.expected_fingerprints"><code class="docutils literal notranslate"><span class="pre">CompositeStep.expected_fingerprints()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.composite_step.CompositeStep.get_model_chemistry_options"><code class="docutils literal notranslate"><span class="pre">CompositeStep.get_model_chemistry_options()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.composite_step.CompositeStep.get_task"><code class="docutils literal notranslate"><span class="pre">CompositeStep.get_task()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.composite_step.CompositeStep.make_evaluator"><code class="docutils literal notranslate"><span class="pre">CompositeStep.make_evaluator()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.composite_step.CompositeStep.my_description"><code class="docutils literal notranslate"><span class="pre">CompositeStep.my_description</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="composite_step.html#module-composite_step.evaluate">composite_step.evaluate module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator.cancel"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator.cancel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator.cancelled"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator.cancelled</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator.close"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator.close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator.expected_fingerprints"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator.expected_fingerprints()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator.mdi_capable"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator.mdi_capable</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator.path"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator.path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator.results"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator.results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeEvaluator.submit"><code class="docutils literal notranslate"><span class="pre">CompositeEvaluator.submit()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeResult"><code class="docutils literal notranslate"><span class="pre">CompositeResult</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeResult.key"><code class="docutils literal notranslate"><span class="pre">CompositeResult.key</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.evaluate.CompositeResult.ok"><code class="docutils literal notranslate"><span class="pre">CompositeResult.ok</span></code></a></li>
@@ -579,6 +591,9 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.HARTREE_TO_KJ"><code class="docutils literal notranslate"><span class="pre">HARTREE_TO_KJ</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.component_levels"><code class="docutils literal notranslate"><span class="pre">component_levels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.composite_data"><code class="docutils literal notranslate"><span class="pre">composite_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.composite_record"><code class="docutils literal notranslate"><span class="pre">composite_record()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.cost_key"><code class="docutils literal notranslate"><span class="pre">cost_key()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.delegate"><code class="docutils literal notranslate"><span class="pre">delegate()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.delegated_analyze_task"><code class="docutils literal notranslate"><span class="pre">delegated_analyze_task()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.delegated_get_task"><code class="docutils literal notranslate"><span class="pre">delegated_get_task()</span></code></a></li>

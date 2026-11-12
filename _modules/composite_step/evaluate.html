@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>composite_step.evaluate &#8212; SEAMM Composite Plug-in 2026.11.11 documentation</title>
+    <title>composite_step.evaluate &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="../../_static/documentation_options.js?v=b41936cd"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.12" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -512,6 +512,7 @@
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
@@ -648,8 +649,13 @@
     <span class="n">available</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">evaluator_factory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">"Composite"</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The composite energy of each structure.</span>
+
+<span class="sd">    The components run one after another, cheapest first (:func:`cost_key`),</span>
+<span class="sd">    each over all the structures at once. A structure that fails a component is</span>
+<span class="sd">    not sent to the later ones.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -662,8 +668,10 @@
 <span class="sd">        Where the components' tasks go, ``&lt;directory&gt;/&lt;component&gt;``.</span>
 <span class="sd">    lookup : callable, optional</span>
 <span class="sd">        ``lookup(source, model_chemistry, key, configuration)`` -&gt; ``(energy</span>
-<span class="sd">        kJ/mol, how)`` or None: a value the consumer already has (from the</span>
-<span class="sd">        fragment store or an earlier run), which is then not computed.</span>
+<span class="sd">        kJ/mol, how)`` or ``(energy, how, record)``, or None: a value the</span>
+<span class="sd">        consumer already has (from the fragment store or an earlier run), which</span>
+<span class="sd">        is then not computed. ``record`` (at least its ``fingerprint``) keeps the</span>
+<span class="sd">        composite record the same as when the component is computed.</span>
 <span class="sd">    constants : {str: float}, optional</span>
 <span class="sd">        The recipe's empirical values, E_h; converted to kJ/mol here.</span>
 <span class="sd">    available : dict, optional</span>
@@ -672,6 +680,9 @@
 <span class="sd">        Makes the evaluators, ``factory(node, mc, properties=, directory=,</span>
 <span class="sd">        name=)``; seamm_exec.Evaluator by default (tests replace it).</span>
 <span class="sd">    name : str</span>
+<span class="sd">    options : {str: dict}, optional</span>
+<span class="sd">        Per structure (by key), the options it is submitted with to every</span>
+<span class="sd">        component (``charge``, ``multiplicity``, ``atom_indices``, ...).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -685,6 +696,13 @@
 
     <span class="n">levels</span> <span class="o">=</span> <span class="n">component_levels</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
     <span class="n">mcs</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span><span class="p">:</span> <span class="n">resolve_level</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span> <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">levels</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">mcs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">mcs</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">cost_key</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">directory</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">directory</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># no node, or one not placed in a flowchart</span>
+            <span class="n">directory</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="n">known</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"empirical"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
     <span class="n">constants</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">constants</span> <span class="ow">or</span> <span class="p">{})</span>
@@ -704,11 +722,12 @@
                 <span class="k">continue</span>
             <span class="n">got</span> <span class="o">=</span> <span class="n">lookup</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">configuration</span><span class="p">)</span> <span class="k">if</span> <span class="n">lookup</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">got</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">energy</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">got</span>
+                <span class="n">energy</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">got</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">got</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">record</span> <span class="o">=</span> <span class="n">got</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">got</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="kc">None</span>
                 <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">"energy"</span><span class="p">:</span> <span class="n">energy</span><span class="p">,</span>
                     <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
-                    <span class="s2">"record"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">"record"</span><span class="p">:</span> <span class="n">record</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="s2">"model_chemistry"</span><span class="p">:</span> <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">],</span>
                 <span class="p">}</span>
             <span class="k">else</span><span class="p">:</span>
@@ -724,7 +743,7 @@
             <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">evaluator</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">to_run</span><span class="p">:</span>
-                <span class="n">evaluator</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">structures</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                <span class="n">evaluator</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">structures</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">results</span><span class="p">():</span>
                 <span class="n">composite</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">energy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -761,17 +780,156 @@
 
 
 
+<span class="c1">#: Rough relative cost of a model chemistry's type and method, for ordering the</span>
+<span class="c1">#: components: a structure that fails a cheap component then never pays for an</span>
+<span class="c1">#: expensive one.</span>
+<span class="n">_TYPE_COST</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"FF"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"SQM"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"MLFF"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"DFT"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"CMP"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"QC"</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+<span class="n">_METHOD_COST</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">"CCSDT"</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"CCSD(T)"</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"QCISD(T)"</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"CCSD"</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"MP4"</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"MP3"</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"MP2"</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"HF"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="cost_key">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.cost_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cost_key</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A sort key that puts cheap components first: the type, the method</span>
+<span class="sd">    (DLPNO cheaper, F12 dearer), then the basis set's cardinal number."""</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">owner_type</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"@"</span><span class="p">)</span>
+    <span class="n">mtype</span> <span class="o">=</span> <span class="n">owner_type</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">method</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_METHOD_COST</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">method</span><span class="p">:</span>
+            <span class="n">cost</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">break</span>
+    <span class="k">if</span> <span class="s2">"DLPNO"</span> <span class="ow">in</span> <span class="n">method</span><span class="p">:</span>
+        <span class="n">cost</span> <span class="o">-=</span> <span class="mf">2.5</span>
+    <span class="k">if</span> <span class="s2">"F12"</span> <span class="ow">in</span> <span class="n">method</span><span class="p">:</span>
+        <span class="n">cost</span> <span class="o">+=</span> <span class="mf">1.5</span>
+    <span class="n">cardinal</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">upper</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">letter</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"D"</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s2">"T"</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="s2">"Q"</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="s2">"5"</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="s2">"6"</span><span class="p">,</span> <span class="mi">6</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"V</span><span class="si">{</span><span class="n">letter</span><span class="si">}</span><span class="s2">Z"</span> <span class="ow">in</span> <span class="n">upper</span>
+            <span class="ow">or</span> <span class="sa">f</span><span class="s2">"-</span><span class="si">{</span><span class="n">letter</span><span class="si">}</span><span class="s2">ZVP"</span> <span class="ow">in</span> <span class="n">upper</span>
+            <span class="ow">or</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">letter</span><span class="si">}</span><span class="s2">ZVP"</span> <span class="ow">in</span> <span class="n">upper</span>
+        <span class="p">):</span>
+            <span class="n">cardinal</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">_TYPE_COST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mtype</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">cost</span><span class="p">,</span> <span class="n">cardinal</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="composite_record">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.composite_record">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">composite_record</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">components</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The calculation record of a composite energy, in the form of a code's</span>
+<span class="sd">    (:func:`seamm_util.fingerprint.calculation_record`): its fingerprint hashes the</span>
+<span class="sd">    recipe's fingerprint and every component's settings fingerprint, so equal</span>
+<span class="sd">    fingerprints mean the same recipe of the same calculations. The components'</span>
+<span class="sd">    own records are kept under ``components``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    components : {str: dict}</span>
+<span class="sd">        Per component, its ``record`` (the code's calculation record, or None</span>
+<span class="sd">        when the energy came from a store or an earlier run without one) and</span>
+<span class="sd">        ``model_chemistry``.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_util.fingerprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculation_record</span>
+
+    <span class="n">fingerprints</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">source</span><span class="p">:</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"record"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fingerprint"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="n">record</span> <span class="o">=</span> <span class="n">calculation_record</span><span class="p">(</span>
+        <span class="s2">"SEAMM composite"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">version</span><span class="p">),</span>
+        <span class="p">{</span>
+            <span class="s2">"recipe"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(),</span>
+            <span class="s2">"components"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">fingerprints</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">hashed_version</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">version</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"record"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"geometry fingerprint"</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="p">}</span> <span class="o">-</span> <span class="p">{</span><span class="kc">None</span><span class="p">}</span>
+    <span class="n">record</span><span class="p">[</span><span class="s2">"geometry fingerprint"</span><span class="p">]</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">record</span><span class="p">[</span><span class="s2">"recipe"</span><span class="p">]</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">record</span><span class="p">[</span><span class="s2">"model chemistry"</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span>
+    <span class="n">record</span><span class="p">[</span><span class="s2">"components"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">source</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"model chemistry"</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model_chemistry"</span><span class="p">),</span>
+            <span class="s2">"fingerprint"</span><span class="p">:</span> <span class="n">fingerprints</span><span class="p">[</span><span class="n">source</span><span class="p">],</span>
+            <span class="s2">"record"</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"record"</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">record</span></div>
+
+
+
+<div class="viewcode-block" id="composite_data">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.composite_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">composite_data</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">components</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``data`` as consumers get it on either route: ``energy`` (E0, kJ/mol),</span>
+<span class="sd">    ``composite`` (the recipe, the components' energies and how they were</span>
+<span class="sd">    obtained, every value ``combine`` defines) and ``calculation`` (the composite</span>
+<span class="sd">    record, :func:`composite_record`)."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"energy"</span><span class="p">:</span> <span class="n">results</span><span class="p">[</span><span class="s2">"E0"</span><span class="p">],</span>
+        <span class="s2">"composite"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"recipe"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"version"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="s2">"fingerprint"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(),</span>
+            <span class="s2">"model chemistry"</span><span class="p">:</span> <span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">),</span>
+            <span class="s2">"components"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">source</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"energy"</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s2">"energy"</span><span class="p">],</span>
+                    <span class="s2">"how"</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"how"</span><span class="p">,</span> <span class="s2">"computed"</span><span class="p">),</span>
+                    <span class="s2">"model chemistry"</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model_chemistry"</span><span class="p">),</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">},</span>
+            <span class="s2">"results"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">results</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">"calculation"</span><span class="p">:</span> <span class="n">composite_record</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">components</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
 <span class="c1"># -- The single-component task route for any consumer of a model chemistry ---------</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_recipe_of</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">,</span> <span class="n">data_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">.recipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecipeLibrary</span>
+<span class="w">    </span><span class="sd">"""The recipe of a ``SEAMM:CMP@`` model chemistry: from the library (shipped,</span>
+<span class="sd">    and the ``recipes`` directories of ``data_path``), else from the file that</span>
+<span class="sd">    model-chemistry discovery found it in (``recipe_path`` in its options), so a</span>
+<span class="sd">    user's or a job's recipe is found wherever the model chemistry is run."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.recipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecipeLibrary</span><span class="p">,</span> <span class="n">load_recipe</span>
 
     <span class="n">options</span> <span class="o">=</span> <span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recipe"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recipe_version"</span><span class="p">)</span>
     <span class="n">extra</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"recipes"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">data_path</span> <span class="ow">or</span> <span class="p">())]</span>
-    <span class="k">return</span> <span class="n">RecipeLibrary</span><span class="p">(</span><span class="n">extra_directories</span><span class="o">=</span><span class="n">extra</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">RecipeLibrary</span><span class="p">(</span><span class="n">extra_directories</span><span class="o">=</span><span class="n">extra</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recipe_path"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="k">raise</span>
+        <span class="n">recipe</span> <span class="o">=</span> <span class="n">load_recipe</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recipe_source"</span><span class="p">,</span> <span class="s2">"user"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">recipe</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">name</span> <span class="ow">or</span> <span class="p">(</span><span class="n">version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">recipe</span><span class="o">.</span><span class="n">version</span> <span class="o">!=</span> <span class="n">version</span><span class="p">):</span>
+            <span class="k">raise</span>
+        <span class="k">return</span> <span class="n">recipe</span>
 
 
 <div class="viewcode-block" id="delegate">
@@ -840,18 +998,255 @@
     <span class="n">energy</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"energy"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">energy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">combine</span><span class="p">({</span><span class="n">source</span><span class="p">:</span> <span class="n">energy</span><span class="p">})</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">"component energy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">"energy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">"E0"</span><span class="p">]</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">"composite"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"recipe"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="s2">"version"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
-            <span class="s2">"fingerprint"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(),</span>
-            <span class="s2">"component"</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
-            <span class="s2">"component model chemistry"</span><span class="p">:</span> <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">],</span>
-            <span class="s2">"results"</span><span class="p">:</span> <span class="n">results</span><span class="p">,</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calculation"</span><span class="p">)</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">source</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"energy"</span><span class="p">:</span> <span class="n">energy</span><span class="p">,</span>
+                <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"computed"</span><span class="p">,</span>
+                <span class="s2">"record"</span><span class="p">:</span> <span class="n">record</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"model_chemistry"</span><span class="p">:</span> <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">],</span>
+            <span class="p">}</span>
         <span class="p">}</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">composite_data</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">components</span><span class="p">,</span> <span class="n">results</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">data</span></div>
 
+
+
+<span class="c1"># -- The evaluator of a multi-component recipe, for every consumer ------------------</span>
+
+
+<div class="viewcode-block" id="CompositeEvaluator">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.CompositeEvaluator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CompositeEvaluator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Evaluates a composite model chemistry at many structures, with the</span>
+<span class="sd">    interface of :class:`seamm_exec.Evaluator`, which returns it from</span>
+<span class="sd">    ``Evaluator(...)`` through :meth:`CompositeStep.make_evaluator` when the recipe</span>
+<span class="sd">    combines several calculations.</span>
+
+<span class="sd">    Each component runs as an ordinary Evaluator of its own program, over all the</span>
+<span class="sd">    submitted structures (:func:`evaluate_recipe`), with that program's own</span>
+<span class="sd">    resources: a consumer's ``resources`` are not passed on, since an F12</span>
+<span class="sd">    component needs other memory than a DFT one. The job's target and the task</span>
+<span class="sd">    set's options are passed on.</span>
+
+<span class="sd">    Energies only: a composite has no gradients or stress yet.</span>
+
+<span class="sd">    The arguments ``node``, ``model_chemistry``, ``properties``, ``path``,</span>
+<span class="sd">    ``directory``, ``target``, ``task_set_options``, ``resources`` and ``name`` are</span>
+<span class="sd">    as for :class:`seamm_exec.Evaluator`. ``path`` (for tests only) is passed to</span>
+<span class="sd">    every component's evaluator; otherwise each chooses its own.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    recipe : composite_step.recipes.Recipe, optional</span>
+<span class="sd">        Default: the model chemistry's.</span>
+<span class="sd">    component_lookup : callable, optional</span>
+<span class="sd">        ``lookup(source, model_chemistry, key, configuration)`` -&gt; ``(energy</span>
+<span class="sd">        kJ/mol, how)``, ``(energy, how, record)`` or None (see</span>
+<span class="sd">        :func:`evaluate_recipe`): a component energy the consumer already has</span>
+<span class="sd">        (a fragment store, an earlier run), which is then not computed.</span>
+<span class="sd">    available : dict, optional</span>
+<span class="sd">        The discovered model chemistries.</span>
+<span class="sd">    evaluator_factory : callable, optional</span>
+<span class="sd">        For tests: makes the components' evaluators.</span>
+<span class="sd">    """</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="s2">"batch"</span>
+    <span class="n">mdi_capable</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">node</span><span class="p">,</span>
+        <span class="n">model_chemistry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">recipe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">properties</span><span class="o">=</span><span class="p">(</span><span class="s2">"energy"</span><span class="p">,</span> <span class="s2">"gradients"</span><span class="p">),</span>
+        <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">task_set_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">resources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"Composite"</span><span class="p">,</span>
+        <span class="n">component_lookup</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">available</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">evaluator_factory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">model_chemistry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">model_chemistry</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">"_model_chemistry"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_chemistry</span> <span class="o">=</span> <span class="n">model_chemistry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recipe</span> <span class="o">=</span> <span class="n">recipe</span> <span class="k">if</span> <span class="n">recipe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_recipe_of</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="s2">"energy"</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The composite method </span><span class="si">{</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'level'</span><span class="p">)</span><span class="si">}</span><span class="s2"> gives energies "</span>
+                <span class="sa">f</span><span class="s2">"only; it cannot give </span><span class="si">{</span><span class="s1">' or '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="o">=</span> <span class="n">directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_set_options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">task_set_options</span> <span class="ow">or</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resources</span> <span class="o">=</span> <span class="n">resources</span>  <span class="c1"># not passed on, see above</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_lookup</span> <span class="o">=</span> <span class="n">component_lookup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="n">available</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_factory</span> <span class="o">=</span> <span class="n">evaluator_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">_constants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recipe</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_submitted</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_done</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_running</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="CompositeEvaluator.close">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.CompositeEvaluator.close">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="CompositeEvaluator.submit">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.CompositeEvaluator.submit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add a structure; returns its key (unique, filesystem-safe)."""</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"s</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_submitted</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">06d</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_submitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Duplicate key '</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_submitted</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">options</span> <span class="ow">or</span> <span class="p">{}))</span>
+        <span class="k">return</span> <span class="n">key</span></div>
+
+
+<div class="viewcode-block" id="CompositeEvaluator.cancel">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.CompositeEvaluator.cancel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Stop: the component evaluator running now is cancelled, and no other</span>
+<span class="sd">        component starts."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">evaluator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_running</span><span class="p">:</span>
+            <span class="n">cancel</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">evaluator</span><span class="p">,</span> <span class="s2">"cancel"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cancel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cancel</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancelled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span>
+
+<div class="viewcode-block" id="CompositeEvaluator.expected_fingerprints">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.CompositeEvaluator.expected_fingerprints">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expected_fingerprints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""None: a composite is never stored as such, only its components (whose</span>
+<span class="sd">        fingerprints the components' programs predict)."""</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_component_evaluator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"cancelled"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">evaluator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factory</span><span class="p">(</span>
+                <span class="n">node</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">seamm_exec</span>
+
+            <span class="n">evaluator</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">Evaluator</span><span class="p">(</span>
+                <span class="n">node</span><span class="p">,</span>
+                <span class="n">mc</span><span class="p">,</span>
+                <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+                <span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
+                <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+                <span class="n">task_set_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_set_options</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_running</span> <span class="o">=</span> <span class="p">[</span><span class="n">evaluator</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">evaluator</span>
+
+<div class="viewcode-block" id="CompositeEvaluator.results">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.CompositeEvaluator.results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Compute what has been submitted; yield an</span>
+<span class="sd">        :class:`seamm_exec.evaluator.EvaluatorResult` for each structure, once all</span>
+<span class="sd">        its components are done."""</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec.evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvaluatorResult</span>
+
+        <span class="n">pending</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_submitted</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pending</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">pending</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">:</span>
+                <span class="k">raise</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">pending</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">EvaluatorResult</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"cancelled"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"batch"</span>
+                <span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">composite</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">composite</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">EvaluatorResult</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">composite</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"batch"</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">composite_data</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">recipe</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_chemistry</span><span class="p">,</span>
+                <span class="n">composite</span><span class="o">.</span><span class="n">components</span><span class="p">,</span>
+                <span class="n">composite</span><span class="o">.</span><span class="n">results</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">yield</span> <span class="n">EvaluatorResult</span><span class="p">(</span>
+                <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">composite</span><span class="o">.</span><span class="n">E0</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"batch"</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pending</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">evaluate_recipe</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">recipe</span><span class="p">,</span>
+            <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">configuration</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">pending</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="n">directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span>
+            <span class="n">lookup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">component_lookup</span><span class="p">,</span>
+            <span class="n">constants</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">,</span>
+            <span class="n">available</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">available</span><span class="p">,</span>
+            <span class="n">evaluator_factory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_component_evaluator</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">options</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span> <span class="ow">in</span> <span class="n">pending</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_running</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_constants</span><span class="p">(</span><span class="n">recipe</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The recipe's empirical values (E_h) that are plain numbers. Terms that</span>
+<span class="sd">    depend on the structure (higher-level corrections, spin-orbit tables) are not</span>
+<span class="sd">    implemented yet, and a recipe that needs them is refused."""</span>
+    <span class="n">constants</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"empirical"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">constants</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">),</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">constants</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">"value"</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The recipe </span><span class="si">{</span><span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: the empirical term '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' depends on "</span>
+                <span class="s2">"the structure, which is not implemented yet."</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">constants</span>
 </pre></div>
 
                 </article>

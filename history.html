@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM Composite Plug-in 2026.11.11 documentation</title>
+    <title>History &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="_static/documentation_options.js?v=b41936cd"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.12" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,23 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.12 – Recipes that combine several calculations run in every step</dt><dd><ul class="simple">
+<li><p>A composite recipe that combines several calculations now runs wherever a
+model chemistry is used: the Energy step, the Thermochemistry step’s CBH
+approach, and the others that run model chemistries through seamm-exec’s
+Evaluator. Each component runs as one batch of its own program over all the
+structures, the cheapest first, with that program’s own memory and cores.</p></li>
+<li><p>A structure that fails one component is not sent to the later ones, and its
+result names the component that failed.</p></li>
+<li><p>Every result carries the composite record: the recipe’s fingerprint and every
+component’s settings fingerprint, in the same form whether the recipe has one
+component or several, and whether a component was computed or found in a
+store.</p></li>
+<li><p>A user’s or a job’s own recipe (in a <code class="docutils literal notranslate"><span class="pre">recipes</span></code> directory of SEAMM’s data
+path) is found wherever its model chemistry runs.</p></li>
+<li><p>Needs seamm-exec 2026.11.12 or later for recipes with several components.</p></li>
+</ul>
+</dd>
 <dt>2026.11.11 – First release: composite methods as model chemistries</dt><dd><ul class="simple">
 <li><p>Composite methods are described by recipes, short YAML files that say how the
 energy is made from ordinary calculations: the geometry and frequency level,

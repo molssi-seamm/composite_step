@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM Composite Plug-in 2026.11.11 documentation</title>
+    <title>User Guide &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="../_static/documentation_options.js?v=b41936cd"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.12" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -617,12 +617,24 @@ your own may not reuse the name and version of a shipped one.</p>
 </section>
 <section id="what-is-not-there-yet">
 <h2>What is not there yet<a class="headerlink" href="#what-is-not-there-yet" title="Link to this heading">#</a></h2>
-<p>Each component needs a complete <code class="docutils literal notranslate"><span class="pre">level</span></code>; choosing the code from a method and a
-basis set is not implemented yet. <code class="docutils literal notranslate"><span class="pre">hf_part</span></code> and <code class="docutils literal notranslate"><span class="pre">corr_part</span></code> need the HF part
-of a component, which the codes do not return yet. A recipe whose energy comes from one
-calculation runs anywhere a model chemistry is used; a recipe that combines
-several runs through the steps that use <code class="docutils literal notranslate"><span class="pre">composite_step.evaluate.evaluate_recipe</span></code>,
-such as Thermochemistry. Gradients of composite methods are not available.</p>
+<p>A recipe runs anywhere a model chemistry is used: the Energy step, the
+Thermochemistry step’s CBH approach, and the others. A recipe that combines several
+calculations runs each component as one batch of its own program over all the
+structures, the cheapest components first. A structure that fails one component is
+not sent to the later ones, and its result names the component that failed. Each
+result carries the composite record: the recipe’s fingerprint together with every
+component’s settings fingerprint.</p>
+<p>Not there yet:</p>
+<ul class="simple">
+<li><p>Each component needs a complete <code class="docutils literal notranslate"><span class="pre">level</span></code>; choosing the code from a method and a
+basis set is not implemented yet.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hf_part</span></code> and <code class="docutils literal notranslate"><span class="pre">corr_part</span></code> need the HF part of a component, which the codes do
+not return yet.</p></li>
+<li><p>Empirical terms that depend on the structure (higher-level corrections,
+spin-orbit tables) are not implemented; a recipe that needs them is refused.</p></li>
+<li><p>Composite methods give energies only: no gradients, so they cannot be used to
+optimize structures or by steps that need forces.</p></li>
+</ul>
 </section>
 <section id="indices-and-tables">
 <h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">#</a></h2>
