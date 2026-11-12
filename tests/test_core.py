@@ -136,11 +136,36 @@ def test_component_settings_and_labels(resolved):
     assert ae["options"]["frozen_core"] == SETS["inner"]
     assert fc["options"]["frozen_core"] == SETS["valence"]
     # One level, two calculations: told apart by their labels
-    assert ae["level"] == f"{CV}|fc=inner" and fc["level"] == f"{CV}|fc=valence"
+    inner, valence = R.frozen_core_key(SETS["inner"]), R.frozen_core_key(
+        SETS["valence"]
+    )
+    assert ae["level"] == f"{CV}|fc={inner}" and fc["level"] == f"{CV}|fc={valence}"
     rel = E.component_mc(recipe, "rel")
     assert rel["options"]["relativistic"] == "DKH2"
     assert rel["options"]["nucleus"] == "point"
-    assert rel["level"].endswith("|fc=valence|DKH2(point)")
+    assert rel["level"].endswith(f"|fc={valence}|DKH2(point)")
+
+
+def test_labels_are_canonical(resolved):
+    """The same counts under another name give the same label (one calculation,
+    one key); the same name with other counts gives another."""
+    renamed = tier_a()
+    renamed["frozen_core_definitions"] = {
+        "core1": dict(reversed(list(SETS["inner"].items()))),  # other order too
+        "valence": SETS["valence"],
+    }
+    renamed["components"]["cv_ae"]["frozen_core"] = "core1"
+    a = E.component_mc(R.Recipe.from_dict(tier_a()), "cv_ae")["level"]
+    b = E.component_mc(R.Recipe.from_dict(renamed), "cv_ae")["level"]
+    assert a == b
+    changed = tier_a()
+    changed["frozen_core_definitions"] = {
+        "inner": dict(SETS["inner"], S=0),
+        "valence": SETS["valence"],
+    }
+    c = E.component_mc(R.Recipe.from_dict(changed), "cv_ae")["level"]
+    assert c != a
+    assert R.frozen_core_key("none") == "none"
 
 
 def test_capabilities_are_checked(monkeypatch):

@@ -832,13 +832,28 @@ def component_settings(recipe, comp):
     if fc is not None:
         sets = recipe.data.get("frozen_core_definitions") or {}
         settings["frozen_core"] = sets.get(fc, fc)
-        label.append(f"fc={fc}")
+        label.append(f"fc={frozen_core_key(settings['frozen_core'])}")
     rel = comp.get("relativistic", "none")
     if rel != "none":
         settings["relativistic"] = rel
         settings["nucleus"] = comp["nucleus"]
         label.append(f"{rel}({comp['nucleus']})")
+    # A fixed order: the frozen core, then the Hamiltonian
     return settings, "".join(f"|{x}" for x in label)
+
+
+def frozen_core_key(frozen_core):
+    """A canonical key for a frozen core: "none", "default", or a short hash of
+    the per-element counts, so the same counts give the same key whatever a recipe
+    calls the set, and different counts never share one."""
+    if frozen_core in FROZEN_CORE_SPECIAL:
+        return frozen_core
+    text = json.dumps(
+        {str(k): int(v) for k, v in sorted(frozen_core.items())},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(text.encode()).hexdigest()[:8]
 
 
 def _check_level(what, level, allow_scale=False):
