@@ -431,3 +431,26 @@ def test_a_user_recipe_is_found_from_its_path(tmp_path):
     assert recipe.name == "mine" and recipe.version == 2
     with pytest.raises(KeyError):
         E._recipe_of(dict(mc, options=dict(mc["options"], recipe_version=3)))
+
+
+def test_looked_up_components_keep_their_fingerprints(composite):
+    """A component from a store carries its fingerprint into the composite
+    record, so the record is the same as when it is computed."""
+    make, _ = composite
+    with make() as evaluator:
+        evaluator.submit("conf1", key="s1")
+        (computed,) = list(evaluator.results())
+
+    def lookup(source, mc, key, configuration):
+        energy = ENERGIES[mc["level"]][key]
+        return energy, "store", {"fingerprint": f"fp:{key}"}
+
+    with make(component_lookup=lookup) as evaluator:
+        evaluator.submit("conf1", key="s1")
+        (stored,) = list(evaluator.results())
+    assert stored.energy == computed.energy
+    assert stored.data["composite"]["components"]["ccsdt"]["how"] == "store"
+    assert (
+        stored.data["calculation"]["fingerprint"]
+        == computed.data["calculation"]["fingerprint"]
+    )

@@ -158,8 +158,10 @@ def evaluate_recipe(
         Where the components' tasks go, ``<directory>/<component>``.
     lookup : callable, optional
         ``lookup(source, model_chemistry, key, configuration)`` -> ``(energy
-        kJ/mol, how)`` or None: a value the consumer already has (from the
-        fragment store or an earlier run), which is then not computed.
+        kJ/mol, how)`` or ``(energy, how, record)``, or None: a value the
+        consumer already has (from the fragment store or an earlier run), which
+        is then not computed. ``record`` (at least its ``fingerprint``) keeps the
+        composite record the same as when the component is computed.
     constants : {str: float}, optional
         The recipe's empirical values, E_h; converted to kJ/mol here.
     available : dict, optional
@@ -207,11 +209,12 @@ def evaluate_recipe(
                 continue
             got = lookup(source, mc, key, configuration) if lookup else None
             if got is not None:
-                energy, how = got
+                energy, how = got[0], got[1]
+                record = got[2] if len(got) > 2 else None
                 out[key].components[source] = {
                     "energy": energy,
                     "how": how,
-                    "record": None,
+                    "record": record if isinstance(record, dict) else None,
                     "model_chemistry": mc["level"],
                 }
             else:
@@ -502,7 +505,8 @@ class CompositeEvaluator:
         Default: the model chemistry's.
     component_lookup : callable, optional
         ``lookup(source, model_chemistry, key, configuration)`` -> ``(energy
-        kJ/mol, how)`` or None: a component energy the consumer already has
+        kJ/mol, how)``, ``(energy, how, record)`` or None (see
+        :func:`evaluate_recipe`): a component energy the consumer already has
         (a fragment store, an earlier run), which is then not computed.
     available : dict, optional
         The discovered model chemistries.
