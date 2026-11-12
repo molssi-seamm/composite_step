@@ -1,6 +1,21 @@
 =======
 History
 =======
+2026.11.12.2 -- Core-valence and relativistic corrections, and the tier-A recipes
+    * Recipe components can be given their frozen core (named sets of frozen
+      orbitals per element), a scalar-relativistic Hamiltonian with its nucleus
+      model, and a decontracted basis, so recipes can add core-valence and
+      scalar-relativistic corrections. A difference of two components must change
+      one thing only, or the recipe is refused.
+    * Three shipped recipes give accurate reference values after W4: CCSD(T)-F12
+      (H-Ar), CCSD(T) extrapolated from triple and quadruple zeta (H-Ar, Ga-Br),
+      and the same with a decontracted relativistic correction for species with
+      calcium. Their core-valence and relativistic corrections agree with W4's to
+      0.13 and 0.01 kJ/mol on test reactions.
+    * Components of one model chemistry with different settings are kept apart, in
+      the job and the fragment store.
+    * Needs orca-step 2026.11.12.1 or later for these settings.
+
 2026.11.12.1 -- Recipes that use the parts of an energy
     * Recipes can use the parts of a component's energy: ``part(c, "name")`` for
       the HF energy, the CABS singles, the correlation energies and the triples that
