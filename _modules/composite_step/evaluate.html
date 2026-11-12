@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>composite_step.evaluate &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
+    <title>composite_step.evaluate &#8212; SEAMM Composite Plug-in 2026.11.12.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=900c25b8"></script>
+    <script src="../../_static/documentation_options.js?v=a7f4afd2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.1" />
+  <meta name="docsearch:version" content="2026.11.12.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -616,6 +616,57 @@
 
 
 
+<div class="viewcode-block" id="component_mc">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.component_mc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">component_mc</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">available</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ``_model_chemistry`` wrapper a component runs with: its level, plus the</span>
+<span class="sd">    settings the recipe gives it (frozen core, relativistic Hamiltonian, nucleus</span>
+<span class="sd">    model) as options, checked against what the program says it can do, and a</span>
+<span class="sd">    level label that tells apart components of one level with other settings."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.recipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">component_settings</span>
+
+    <span class="n">level</span> <span class="o">=</span> <span class="n">component_levels</span><span class="p">(</span><span class="n">recipe</span><span class="p">)[</span><span class="n">source</span><span class="p">]</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">resolve_level</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span>
+    <span class="n">comp</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">geometry</span> <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="n">GEOMETRY</span> <span class="k">else</span> <span class="n">recipe</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+    <span class="n">settings</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">component_settings</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">capabilities</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"capabilities"</span><span class="p">)</span>
+    <span class="n">problems</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">recipe</span><span class="o">.</span><span class="n">needs_parts</span> <span class="ow">and</span> <span class="n">capabilities</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">capabilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"energy parts"</span><span class="p">):</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"it does not report the parts of its energy"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">capabilities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"it does not say what settings it can take"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fc</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kind</span> <span class="o">=</span> <span class="n">fc</span> <span class="k">if</span> <span class="n">fc</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"per-element"</span>
+                <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">capabilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">,</span> <span class="p">()):</span>
+                    <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"it cannot take a </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> frozen core"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">capabilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">):</span>
+                <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"it cannot decontract the basis"</span><span class="p">)</span>
+            <span class="n">rel</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">capabilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">,</span> <span class="p">()):</span>
+                    <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"it has no </span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2"> Hamiltonian"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nucleus"</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">capabilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nucleus"</span><span class="p">,</span> <span class="p">()):</span>
+                    <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"it has no </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'nucleus'</span><span class="p">)</span><span class="si">}</span><span class="s2"> nucleus model"</span>
+                    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The recipe </span><span class="si">{</span><span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: the component '</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">' (</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">) cannot run "</span>
+            <span class="sa">f</span><span class="s2">"as the recipe asks: </span><span class="si">{</span><span class="s1">'; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="p">:</span>
+        <span class="n">mc</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+        <span class="n">mc</span><span class="p">[</span><span class="s2">"options"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">options</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">}</span>
+        <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="o">=</span> <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="o">+</span> <span class="n">label</span>
+    <span class="k">return</span> <span class="n">mc</span></div>
+
+
+
 <div class="viewcode-block" id="resolve_level">
 <a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.resolve_level">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">resolve_level</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -695,7 +746,7 @@
         <span class="n">evaluator_factory</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">Evaluator</span>
 
     <span class="n">levels</span> <span class="o">=</span> <span class="n">component_levels</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-    <span class="n">mcs</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span><span class="p">:</span> <span class="n">resolve_level</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span> <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">levels</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">mcs</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span><span class="p">:</span> <span class="n">component_mc</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">levels</span><span class="p">}</span>
     <span class="n">mcs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">mcs</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">cost_key</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
     <span class="n">options</span> <span class="o">=</span> <span class="n">options</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -989,7 +1040,7 @@
             <span class="s2">"calculations; it runs through composite_step.evaluate_recipe, not as "</span>
             <span class="s2">"one task per structure."</span>
         <span class="p">)</span>
-    <span class="n">mc</span> <span class="o">=</span> <span class="n">resolve_level</span><span class="p">(</span><span class="n">component_levels</span><span class="p">(</span><span class="n">recipe</span><span class="p">)[</span><span class="n">source</span><span class="p">])</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">component_mc</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">recipe</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">provider_of</span><span class="p">(</span><span class="n">mc</span><span class="p">[</span><span class="s2">"step"</span><span class="p">])</span></div>
 
 

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>composite_step.recipes &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
+    <title>composite_step.recipes &#8212; SEAMM Composite Plug-in 2026.11.12.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=900c25b8"></script>
+    <script src="../../_static/documentation_options.js?v=a7f4afd2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.1" />
+  <meta name="docsearch:version" content="2026.11.12.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -552,6 +552,7 @@
     <span class="s2">"empirical"</span><span class="p">,</span>
     <span class="s2">"atoms"</span><span class="p">,</span>
     <span class="s2">"allow_mixed_reference"</span><span class="p">,</span>
+    <span class="s2">"frozen_core_sources"</span><span class="p">,</span>
     <span class="s2">"uncertainty"</span><span class="p">,</span>
     <span class="s2">"validation"</span><span class="p">,</span>
 <span class="p">}</span>
@@ -559,7 +560,14 @@
 
 <span class="c1">#: Fields that describe a recipe without changing its energy; they are left out</span>
 <span class="c1">#: of the fingerprint.</span>
-<span class="n">DESCRIPTIVE</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"description"</span><span class="p">,</span> <span class="s2">"reference"</span><span class="p">,</span> <span class="s2">"doi"</span><span class="p">,</span> <span class="s2">"uncertainty"</span><span class="p">,</span> <span class="s2">"validation"</span><span class="p">}</span>
+<span class="n">DESCRIPTIVE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"description"</span><span class="p">,</span>
+    <span class="s2">"reference"</span><span class="p">,</span>
+    <span class="s2">"doi"</span><span class="p">,</span>
+    <span class="s2">"uncertainty"</span><span class="p">,</span>
+    <span class="s2">"validation"</span><span class="p">,</span>
+    <span class="s2">"frozen_core_sources"</span><span class="p">,</span>
+<span class="p">}</span>
 
 <span class="c1">#: The fields of a component (one ordinary single point at the recipe's geometry).</span>
 <span class="n">COMPONENT_FIELDS</span> <span class="o">=</span> <span class="p">{</span>
@@ -571,6 +579,8 @@
     <span class="s2">"frozen_core"</span><span class="p">,</span>
     <span class="s2">"density_fitting"</span><span class="p">,</span>
     <span class="s2">"relativistic"</span><span class="p">,</span>
+    <span class="s2">"nucleus"</span><span class="p">,</span>  <span class="c1"># point | finite, required with a relativistic Hamiltonian</span>
+    <span class="s2">"decontract"</span><span class="p">,</span>  <span class="c1"># true: the orbital basis decontracted</span>
     <span class="s2">"f12"</span><span class="p">,</span>
     <span class="s2">"sp_shells"</span><span class="p">,</span>
     <span class="s2">"convergence"</span><span class="p">,</span>
@@ -1054,6 +1064,11 @@
 
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uses_default_frozen_core</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Whether a component leaves the frozen core to the program's default."""</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"default"</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">needs_parts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""The components whose parts ``combine`` uses (hf_part, corr_part,</span>
 <span class="sd">        part)."""</span>
@@ -1194,6 +1209,9 @@
                 <span class="s2">"that it is the same in any unit"</span>
             <span class="p">)</span>
 
+    <span class="n">_check_core_and_relativity</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">components</span><span class="p">)</span>
+    <span class="n">_check_subtracted_pairs</span><span class="p">(</span><span class="n">statements</span><span class="p">,</span> <span class="n">components</span><span class="p">)</span>
+
     <span class="c1"># An F12 component split into hf_part + corr_part must account for its CABS</span>
     <span class="c1"># singles, which belong to neither</span>
     <span class="k">for</span> <span class="n">which</span><span class="p">,</span> <span class="n">used</span> <span class="ow">in</span> <span class="n">parts_used</span><span class="p">(</span><span class="n">statements</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -1216,6 +1234,187 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">requires</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">requires</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="s2">"'requires' must be a list of capabilities"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">statements</span></div>
+
+
+
+<span class="n">RELATIVISTIC</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"DKH2"</span><span class="p">,</span> <span class="s2">"X2C"</span><span class="p">)</span>
+<span class="n">NUCLEUS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"point"</span><span class="p">,</span> <span class="s2">"finite"</span><span class="p">)</span>
+<span class="n">FROZEN_CORE_SPECIAL</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_core_and_relativity</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">components</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The frozen-core sets (orbitals per element) and each component's frozen</span>
+<span class="sd">    core, relativistic Hamiltonian and nucleus model."""</span>
+    <span class="n">sets</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core_definitions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="s2">"'frozen_core_definitions' must be a mapping of name: set"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">counts</span> <span class="ow">in</span> <span class="n">sets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">FROZEN_CORE_SPECIAL</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' is reserved and cannot name a frozen-core set"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The frozen-core set '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' must give a number of orbitals (an "</span>
+                <span class="s2">"integer, 0 or more) for each element"</span>
+            <span class="p">)</span>
+    <span class="k">for</span> <span class="n">cname</span><span class="p">,</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The component '</span><span class="si">{</span><span class="n">cname</span><span class="si">}</span><span class="s2">': decontract is true or false"</span><span class="p">)</span>
+        <span class="n">fc</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">FROZEN_CORE_SPECIAL</span> <span class="ow">and</span> <span class="n">fc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The component '</span><span class="si">{</span><span class="n">cname</span><span class="si">}</span><span class="s2">': no frozen-core set '</span><span class="si">{</span><span class="n">fc</span><span class="si">}</span><span class="s2">' (the sets are "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">sets</span><span class="p">))</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">; or 'none', 'default')"</span>
+            <span class="p">)</span>
+        <span class="n">rel</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RELATIVISTIC</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The component '</span><span class="si">{</span><span class="n">cname</span><span class="si">}</span><span class="s2">': relativistic must be one of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RELATIVISTIC</span><span class="p">)</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">rel</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="n">nucleus</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nucleus"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel</span> <span class="o">!=</span> <span class="s2">"none"</span> <span class="ow">and</span> <span class="n">nucleus</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NUCLEUS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The component '</span><span class="si">{</span><span class="n">cname</span><span class="si">}</span><span class="s2">' uses </span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2">: give its nucleus model "</span>
+                <span class="sa">f</span><span class="s2">"explicitly, nucleus: </span><span class="si">{</span><span class="s1">' or '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">NUCLEUS</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel</span> <span class="o">==</span> <span class="s2">"none"</span> <span class="ow">and</span> <span class="n">nucleus</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The component '</span><span class="si">{</span><span class="n">cname</span><span class="si">}</span><span class="s2">' gives a nucleus model without a "</span>
+                <span class="s2">"relativistic Hamiltonian"</span>
+            <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_level_parts</span><span class="p">(</span><span class="n">comp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""(method, basis) of a component: from its level, or its method and basis."""</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">level</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"basis"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">rest</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">level</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"@"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">method</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="n">basis</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_differences</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The kinds of difference between two components: method, basis, frozen</span>
+<span class="sd">    core, relativistic (Hamiltonian and nucleus), other settings."""</span>
+    <span class="n">kinds</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">ma</span><span class="p">,</span> <span class="n">ba</span><span class="p">),</span> <span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="n">bb</span><span class="p">)</span> <span class="o">=</span> <span class="n">_level_parts</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">_level_parts</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ma</span> <span class="o">!=</span> <span class="n">mb</span><span class="p">:</span>
+        <span class="n">kinds</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ba</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">)))</span> <span class="o">!=</span> <span class="p">(</span><span class="n">bb</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">))):</span>
+        <span class="n">kinds</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"basis"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">):</span>
+        <span class="n">kinds</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"frozen core"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">),</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nucleus"</span><span class="p">))</span> <span class="o">!=</span> <span class="p">(</span>
+        <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">),</span>
+        <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nucleus"</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="n">kinds</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">)</span>
+    <span class="n">owner_a</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"code"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"@"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">owner_b</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"code"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"@"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">owner_a</span> <span class="o">!=</span> <span class="n">owner_b</span><span class="p">:</span>
+        <span class="n">kinds</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"program"</span><span class="p">)</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"level"</span><span class="p">,</span>
+        <span class="s2">"code"</span><span class="p">,</span>
+        <span class="s2">"frozen_core"</span><span class="p">,</span>
+        <span class="s2">"relativistic"</span><span class="p">,</span>
+        <span class="s2">"nucleus"</span><span class="p">,</span>
+        <span class="s2">"method"</span><span class="p">,</span>
+        <span class="s2">"basis"</span><span class="p">,</span>
+        <span class="s2">"decontract"</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">b</span><span class="p">))</span> <span class="o">-</span> <span class="n">skip</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="n">kinds</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kinds</span>
+
+
+<span class="c1">#: The ways the two components of a difference may differ: one thing at a time</span>
+<span class="c1">#: (a relativistic correction changes the Hamiltonian and, with it, to a</span>
+<span class="c1">#: recontracted basis)</span>
+<span class="n">ALLOWED_PAIR_DIFFERENCES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">{</span><span class="s2">"method"</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"basis"</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"frozen core"</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"relativistic"</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"relativistic"</span><span class="p">,</span> <span class="s2">"basis"</span><span class="p">},</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_subtracted_pairs</span><span class="p">(</span><span class="n">statements</span><span class="p">,</span> <span class="n">components</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A difference of two components (``a - b``) must change one thing only, so</span>
+<span class="sd">    that it is the correction it is meant to be."""</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">statements</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Sub</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">sub</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">components</span>
+                <span class="ow">and</span> <span class="n">sub</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">components</span>
+            <span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sub</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">id</span>
+            <span class="n">kinds</span> <span class="o">=</span> <span class="n">_differences</span><span class="p">(</span><span class="n">components</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">components</span><span class="p">[</span><span class="n">b</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">kinds</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">b</span><span class="si">}</span><span class="s2">': the two components are the same calculation"</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">kinds</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ALLOWED_PAIR_DIFFERENCES</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">b</span><span class="si">}</span><span class="s2">': the two components differ in "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">kinds</span><span class="p">))</span><span class="si">}</span><span class="s2">; a difference must change one thing "</span>
+                    <span class="s2">"(method, basis, frozen core, or the relativistic Hamiltonian "</span>
+                    <span class="s2">"with its basis), so that it is the correction it is meant to be"</span>
+                <span class="p">)</span>
+
+
+<div class="viewcode-block" id="component_settings">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.recipes.component_settings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">component_settings</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">comp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The settings a component's program is given beyond its level --</span>
+<span class="sd">    ``frozen_core`` (orbitals per element, "none" or "default"), ``relativistic``</span>
+<span class="sd">    and ``nucleus`` -- and a label for the level that tells them apart, so two</span>
+<span class="sd">    components of one level (all electrons and frozen core) are never mixed up."""</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fc</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sets</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core_definitions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s2">"frozen_core"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fc</span><span class="p">,</span> <span class="n">fc</span><span class="p">)</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"fc=</span><span class="si">{</span><span class="n">frozen_core_key</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">'frozen_core'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">):</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s2">"decontract"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"decon"</span><span class="p">)</span>
+    <span class="n">rel</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rel</span> <span class="o">!=</span> <span class="s2">"none"</span><span class="p">:</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s2">"relativistic"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rel</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s2">"nucleus"</span><span class="p">]</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="s2">"nucleus"</span><span class="p">]</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">comp</span><span class="p">[</span><span class="s1">'nucleus'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+    <span class="c1"># A fixed order: the frozen core, the basis, then the Hamiltonian</span>
+    <span class="k">return</span> <span class="n">settings</span><span class="p">,</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"|</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">label</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="frozen_core_key">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.recipes.frozen_core_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">frozen_core_key</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A canonical key for a frozen core: "none", "default", or a short hash of</span>
+<span class="sd">    the per-element counts, so the same counts give the same key whatever a recipe</span>
+<span class="sd">    calls the set, and different counts never share one."""</span>
+    <span class="k">if</span> <span class="n">frozen_core</span> <span class="ow">in</span> <span class="n">FROZEN_CORE_SPECIAL</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">frozen_core</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+        <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">frozen_core</span><span class="o">.</span><span class="n">items</span><span class="p">())},</span>
+        <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">":"</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">8</span><span class="p">]</span></div>
 
 
 
@@ -1356,6 +1555,12 @@
                 <span class="n">recipe</span> <span class="o">=</span> <span class="n">load_recipe</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">RecipeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">"shipped"</span> <span class="ow">and</span> <span class="n">recipe</span><span class="o">.</span><span class="n">uses_default_frozen_core</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: a shipped recipe must give its frozen cores explicitly, "</span>
+                    <span class="s2">"not 'default'; ignored"</span>
+                <span class="p">)</span>
                 <span class="k">continue</span>
             <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">recipe</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">recipes</span><span class="p">:</span>

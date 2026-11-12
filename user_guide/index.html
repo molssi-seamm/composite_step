@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
+    <title>User Guide &#8212; SEAMM Composite Plug-in 2026.11.12.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=900c25b8"></script>
+    <script src="../_static/documentation_options.js?v=a7f4afd2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.1" />
+  <meta name="docsearch:version" content="2026.11.12.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -543,6 +543,31 @@ scaled by 0.9899 and scaled harmonic thermal terms (“HO”).</p>
 revDSD-PBEP86-D4(2021)/def2-TZVPP energy at that geometry.</p>
 </dd>
 </dl>
+<p>Three recipes give accurate reference values, after W4 (Karton et al., J. Chem.
+Phys. 125, 144108 (2006)), on r2SCAN-3c geometries with scaled harmonic thermal
+terms. Each adds to a valence CCSD(T) energy the core-valence correlation (all of
+the outer core correlated, minus a frozen valence core, with cc-pwCVTZ) and the
+scalar relativistic correction (DKH2 with a point nucleus, minus the
+non-relativistic calculation):</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">CCSD(T)-F12+CV+DKH2-r2SCAN-3c-HO</span></code></dt><dd><p>The valence energy from CCSD(T)-F12D/RI with cc-pVTZ-F12 (ORCA’s F12, not
+Molpro’s F12b), and the relativistic correction with cc-pVTZ-DK. For H-Ar:
+cc-pVTZ-F12 exists for no heavier element.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CCSD(T)-CBS(TQ)+CV+DKH2-r2SCAN-3c-HO</span></code></dt><dd><p>The HF energy with cc-pVQZ and the CCSD(T) correlation extrapolated from
+cc-pVTZ and cc-pVQZ, and the relativistic correction with cc-pVTZ-DK. For H-Ar
+and Ga-Br, with all-electron basis sets.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">CCSD(T)-CBS(TQ)+CV+DKH2(decontracted)-r2SCAN-3c-HO</span></code></dt><dd><p>As the previous one, but the relativistic correction uses decontracted
+cc-pVTZ in both halves, for species with Ca, which has no DK basis. It agrees
+with the cc-pVTZ-DK correction within 0.003 kJ/mol on two W4 reactions and
+within 0.06 kJ/mol on GeH4 -&gt; GeH2 + H2. X2C with x2c-TZVPall was not used:
+on CaH2 its correction to the atomization energy differed from decontracted
+DKH2 by 0.82 kJ/mol.</p>
+</dd>
+</dl>
+<p>The core-valence and relativistic corrections agree with W4’s to 0.13 and 0.01
+kJ/mol on the reactions CO + 3 H2 -&gt; CH4 + H2O and CO2 + 4 H2 -&gt; CH4 + 2 H2O.</p>
 <p>Recipes are named by what they contain, not by the role they play in another step,
 so a result labelled with a recipe stays true when presets change.</p>
 </section>
@@ -676,6 +701,34 @@ store, and a recipe reuses them only from the same calculation (the same setting
 fingerprint). A stored energy without parts, needed by a recipe that uses parts, is
 computed again; parts are never derived.</p>
 </section>
+<section id="frozen-cores-and-relativistic-corrections">
+<h2>Frozen cores and relativistic corrections<a class="headerlink" href="#frozen-cores-and-relativistic-corrections" title="Link to this heading">#</a></h2>
+<p>A component can be given:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">frozen_core</span></code></dt><dd><p>The name of a set in <code class="docutils literal notranslate"><span class="pre">frozen_core_definitions</span></code> (the number of frozen
+ORBITALS for each element), <code class="docutils literal notranslate"><span class="pre">none</span></code> (all electrons correlated), or
+<code class="docutils literal notranslate"><span class="pre">default</span></code> (the program’s choice; not allowed in shipped recipes). A
+structure with an element the set does not cover is refused. ORCA counts core
+electrons, and its defaults are not the usual conventions for Li, Be, Na, Mg,
+K, Ca or Ga-Kr, so recipes give the counts explicitly. After each calculation
+the number of frozen orbitals is checked against the count asked for.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">relativistic</span></code>, <code class="docutils literal notranslate"><span class="pre">nucleus</span></code></dt><dd><p>A scalar-relativistic Hamiltonian, <code class="docutils literal notranslate"><span class="pre">DKH2</span></code> or <code class="docutils literal notranslate"><span class="pre">X2C</span></code>, with the nucleus model
+stated explicitly, <code class="docutils literal notranslate"><span class="pre">point</span></code> or <code class="docutils literal notranslate"><span class="pre">finite</span></code>. The shipped recipes use a point
+nucleus: our explicit choice; W4 does not state one.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">decontract</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">true</span></code> decontracts the orbital basis.</p>
+</dd>
+</dl>
+<p>The shipped recipes’ sets are <code class="docutils literal notranslate"><span class="pre">valence</span></code> (the cc-pVnZ conventions: 1s frozen for
+Li-Ne, 1s-2p for Na-Ar, 1s-3p for K and Ca, 1s-3d for Ga-Kr) and <code class="docutils literal notranslate"><span class="pre">inner</span></code> (the
+cc-pwCVnZ conventions: all electrons for Li-Ne, 1s frozen for Na-Ar, 1s-2p for K
+and Ca and for Ga-Kr), each with its source in <code class="docutils literal notranslate"><span class="pre">frozen_core_sources</span></code>.</p>
+<p>A difference of two components, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-</span> <span class="pre">b</span></code>, must change one thing only: the
+method, the basis set, the frozen core, or the relativistic Hamiltonian (with its
+basis), so that it is the correction it is meant to be. Anything else is refused
+when the recipe is read.</p>
+</section>
 <section id="where-recipes-come-from">
 <h2>Where recipes come from<a class="headerlink" href="#where-recipes-come-from" title="Link to this heading">#</a></h2>
 <p>The shipped recipes come with the plug-in. Recipes of your own go in a
@@ -766,6 +819,7 @@ optimize structures or by steps that need forces.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-shipped-recipes">The shipped recipes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-a-recipe">Writing a recipe</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parts-of-an-energy">Parts of an energy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#frozen-cores-and-relativistic-corrections">Frozen cores and relativistic corrections</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-recipes-come-from">Where recipes come from</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-not-there-yet">What is not there yet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices-and-tables">Indices and tables</a></li>
