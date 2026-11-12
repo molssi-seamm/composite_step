@@ -73,27 +73,8 @@ class CompositeParameters(seamm.Parameters):
     Composite, TkComposite, Composite CompositeParameters, CompositeStep
     """
 
-    parameters = {
-        "time": {
-            "default": 100.0,
-            "kind": "float",
-            "default_units": "ps",
-            "enumeration": tuple(),
-            "format_string": ".1f",
-            "description": "Simulation time:",
-            "help_text": ("The time to simulate in the dynamics run."),
-        },
-        # # Results handling ... uncomment if needed
-        # "results": {
-        #     "default": {},
-        #     "kind": "dictionary",
-        #     "default_units": "",
-        #     "enumeration": tuple(),
-        #     "format_string": "",
-        #     "description": "results",
-        #     "help_text": "The results to save to variables or in tables.",
-        # },
-    }
+    #: No parameters yet: composites are used through a Model Chemistry step.
+    parameters = {}
 
     def __init__(self, defaults={}, data=None):
         """

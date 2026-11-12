@@ -1,0 +1,21 @@
+recipe: r2SCAN-3c-HO
+version: 1
+description: >-
+  r2SCAN-3c geometry, frequencies and energy (ORCA's own r2SCAN-3c composite),
+  with the ZPE scaled; HO = scaled harmonic thermal terms. The thermochemistry
+  step's 'quick' preset in 2026-11.
+reference: Grimme, Hansen, Ehlert, Mewes, J. Chem. Phys. 154, 064103 (2021)
+doi: 10.1063/5.0040021
+
+geometry:
+  level: ORCA:CMP@R2SCAN-3C
+frequencies:
+  scale_zpe: 0.9899
+  scale_source: >-
+    fitted to the anharmonic ZPVEs of 22 W4-2006 molecules (SEAMM, 2026-11);
+    seamm_thermochemistry's ZPE table for R2SCAN-3C
+
+components: {}
+
+combine: |
+  E0 = geometry
