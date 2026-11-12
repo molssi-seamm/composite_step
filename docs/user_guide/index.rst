@@ -99,7 +99,8 @@ chemistry.
     * ``schwenke(e_x, e_y, factor)`` -- Schwenke's two-point extrapolation;
     * ``scale(e, factor)``;
     * ``hf_part(c)`` and ``corr_part(c)`` -- the HF and correlation parts of a
-      correlated component.
+      correlated component, and ``part(c, "name")`` -- any named part (see
+      `Parts of an energy`_).
 
     ``E0`` must be assigned: it is the composite energy. Every value must scale
     like an energy, so a combination gives the same result in any unit; this is
@@ -111,6 +112,58 @@ other field, so a result records exactly which recipe made it.
 
 The thermal terms follow from the geometry level: H(0 K) = E0 + s ZPE, and
 H(T) = E0 + s ZPE + [H(T) - E - ZPE], with s the ZPE scale factor.
+
+Parts of an energy
+==================
+
+A correlated calculation reports the parts of its energy with it, so a recipe can
+treat them separately: extrapolate the correlation energy but not the HF energy,
+or scale the triples. ORCA reports them for MP2, RI-MP2, CCSD(T), DLPNO-CCSD(T)
+and their F12 forms:
+
+=====================  ============================================================
+Run                    Parts
+=====================  ============================================================
+MP2                    ``HF``, ``MP2 correlation``
+RI-MP2                 ``HF``, ``RI-MP2 correlation``
+CCSD(T)                ``HF``, ``CCSD correlation``, ``(T)``; ``MP2 correlation``
+                       (closed-shell RHF only)
+CCSD(T)-F12D/RI        ``HF``, ``CABS singles``, ``CCSD correlation``,
+                       ``F12 correction``, ``(T)``; ``MP2 correlation`` (RHF only)
+DLPNO-CCSD(T)          ``HF``, ``DLPNO-MP2 correlation``, ``DLPNO-CCSD
+                       correlation``, ``DLPNO-(T0)``
+DLPNO-CCSD(T)-F12D     ``HF``, ``CABS singles``, ``DLPNO-CCSD correlation``,
+                       ``F12 correction``, ``DLPNO-(T0)``, ``DLPNO-MP2
+                       correlation``
+=====================  ============================================================
+
+Some parts are computed from others when asked for: ``CCSD-F12 correlation``
+(CCSD correlation + F12 correction), ``HF+CABS``, ``(T*)`` (the triples scaled by f,
+the ratio of the CCSD correlation with and without F12) and their DLPNO forms.
+
+* ``HF`` is the energy of the reference determinant the correlation was built on:
+  the SCF energy, or for quasi-restricted orbitals (QRO) the QRO determinant's
+  energy, not the UHF one. For F12 it does not include the CABS singles.
+* ``(T)`` is never scaled. f is ORCA's own value for canonical F12; for DLPNO-F12,
+  where ORCA prints none, it is computed with the same definition.
+* The DLPNO correlation is everything ORCA's total includes. ORCA's printed
+  "uncorrected" DLPNO-F12 correlation leaves some of it out, so the CCSD
+  correlation is the total correlation less the F12 correction and the triples.
+* The parts of a calculation always sum to its energy, within 2e-9 E_h. If they
+  do not, no parts are reported.
+
+``hf_part(c)`` is ``HF``, and ``corr_part(c)`` is the correlation alone: the energy
+less HF and the CABS singles, which belong to neither. A recipe that splits an F12
+component with ``hf_part`` and ``corr_part`` must use its ``part(c, "CABS
+singles")``, or say ``omit: ["CABS singles"]`` for that component; otherwise it is
+refused when it is read. HF parts of components with different references (RHF,
+UHF, QRO) cannot be combined unless the recipe says ``allow_mixed_reference:
+true``.
+
+The parts belong to their calculation. They are stored with it in the fragment
+store, and a recipe reuses them only from the same calculation (the same settings
+fingerprint). A stored energy without parts, needed by a recipe that uses parts, is
+computed again; parts are never derived.
 
 Where recipes come from
 =======================
@@ -134,8 +187,7 @@ Not there yet:
 
 * Each component needs a complete ``level``; choosing the code from a method and a
   basis set is not implemented yet.
-* ``hf_part`` and ``corr_part`` need the HF part of a component, which the codes do
-  not return yet.
+* Only ORCA reports the parts of its energies so far.
 * Empirical terms that depend on the structure (higher-level corrections,
   spin-orbit tables) are not implemented; a recipe that needs them is refused.
 * Composite methods give energies only: no gradients, so they cannot be used to
