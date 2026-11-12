@@ -114,6 +114,7 @@ CAPABILITIES = {
     "nucleus": ["point", "finite"],
     "decontract": True,
     "energy parts": True,
+    "reference": ["default", "UHF", "QRO"],
 }
 
 
@@ -217,3 +218,75 @@ def test_decontracted_relativistic_pair(resolved):
     data["components"]["nonrel"]["frozen_core"] = "inner"
     with pytest.raises(R.RecipeError, match="differ in basis, frozen core"):
         R.Recipe.from_dict(data)
+
+
+# -- the open-shell reference ---------------------------------------------------------
+
+
+def test_open_shell_reference(resolved):
+    """The recipe's open-shell reference goes to every correlated component, not to
+    the geometry level, and is not in the label (closed shells are unchanged)."""
+    data = tier_a()
+    data["open_shell_reference"] = "QRO"
+    recipe = R.Recipe.from_dict(data)
+    plain = R.Recipe.from_dict(tier_a())
+    for name in ("f12", "cv_ae", "rel"):
+        mc = E.component_mc(recipe, name)
+        assert mc["options"]["reference"] == "QRO"
+        assert mc["level"] == E.component_mc(plain, name)["level"]
+    # The geometry level, when combine uses it, keeps the program's default
+    data["combine"] = "E0 = geometry + (cv_ae - cv_fc)\n"
+    with_geometry = R.Recipe.from_dict(data)
+    assert "reference" not in E.component_mc(with_geometry, R.GEOMETRY)["options"]
+    # ... nor in the recipe's own fingerprint: the components' fingerprints carry it
+    assert recipe.fingerprint() == plain.fingerprint()
+
+
+def test_a_component_can_override_the_reference(resolved):
+    data = tier_a()
+    data["open_shell_reference"] = "QRO"
+    data["components"]["f12"] = dict(data["components"]["f12"], reference="UHF")
+    recipe = R.Recipe.from_dict(data)
+    assert E.component_mc(recipe, "f12")["options"]["reference"] == "UHF"
+    assert E.component_mc(recipe, "cv_ae")["options"]["reference"] == "QRO"
+
+
+@pytest.mark.parametrize(
+    "change, message",
+    [
+        ({"open_shell_reference": "ROHF"}, "open_shell_reference must be one of"),
+        ({"cv_fc_reference": "RHF"}, "reference must be one of"),
+        ({"cv_fc_reference": "UHF"}, "differ in frozen core, reference"),
+    ],
+)
+def test_bad_references_are_refused(change, message):
+    data = tier_a()
+    data["open_shell_reference"] = "QRO"
+    if "open_shell_reference" in change:
+        data["open_shell_reference"] = change["open_shell_reference"]
+    if "cv_fc_reference" in change:
+        comp = data["components"]["cv_fc"]
+        data["components"]["cv_fc"] = dict(comp, reference=change["cv_fc_reference"])
+    with pytest.raises(R.RecipeError, match=message):
+        R.Recipe.from_dict(data)
+
+
+def test_a_program_without_qro_is_refused(monkeypatch):
+    data = tier_a()
+    data["open_shell_reference"] = "QRO"
+    recipe = R.Recipe.from_dict(data)
+
+    def uhf_only(level, available=None):
+        caps = dict(CAPABILITIES, reference=["default", "UHF"])
+        return {"level": level, "step": "ORCA", "options": {"capabilities": caps}}
+
+    monkeypatch.setattr(E, "resolve_level", uhf_only)
+    with pytest.raises(R.RecipeError, match="cannot use a QRO reference"):
+        E.component_mc(recipe, "f12")
+
+
+def test_the_shipped_tier_a_recipes_use_qro():
+    library = R.RecipeLibrary()
+    for name in library.names():
+        if "+CV+" in name:
+            assert library.get(name).data["open_shell_reference"] == "QRO"

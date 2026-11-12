@@ -59,6 +59,7 @@ FIELDS = {
     "empirical",
     "atoms",
     "allow_mixed_reference",
+    "open_shell_reference",
     "frozen_core_sources",
     "uncertainty",
     "validation",
@@ -76,13 +77,20 @@ DESCRIPTIVE = {
     "frozen_core_sources",
 }
 
+#: Fields left out of the recipe's own fingerprint although they matter: the
+#: open-shell reference changes only open-shell calculations, and those are told
+#: apart by their components' fingerprints, which the composite's fingerprint
+#: includes. Left out, it changes nothing for closed-shell species, whose results
+#: stay reusable when a recipe adds it.
+FINGERPRINT_EXCLUDED = DESCRIPTIVE | {"open_shell_reference"}
+
 #: The fields of a component (one ordinary single point at the recipe's geometry).
 COMPONENT_FIELDS = {
     "level",  # a complete model chemistry, e.g. ORCA:DFT@PBE0/def2-TZVP
     "method",  # or method + basis, run on the recipe's code
     "basis",
     "code",  # an explicit per-component override of the recipe's code
-    "reference",  # RHF, UHF, ROHF
+    "reference",  # open-shell species: UHF or QRO (overrides open_shell_reference)
     "frozen_core",
     "density_fitting",
     "relativistic",
@@ -581,7 +589,7 @@ class Recipe:
     def fingerprint(self, component_fingerprints=None):
         """A hash of the normalized recipe (its descriptive fields left out),
         and of the components' own fingerprints when given."""
-        normal = {k: v for k, v in self.data.items() if k not in DESCRIPTIVE}
+        normal = {k: v for k, v in self.data.items() if k not in FINGERPRINT_EXCLUDED}
         payload = {"recipe": normal}
         if component_fingerprints:
             payload["components"] = dict(sorted(component_fingerprints.items()))
@@ -670,7 +678,7 @@ def validate(data):
             )
 
     _check_core_and_relativity(data, components)
-    _check_subtracted_pairs(statements, components)
+    _check_subtracted_pairs(statements, _with_references(data, components))
 
     # An F12 component split into hf_part + corr_part must account for its CABS
     # singles, which belong to neither
@@ -701,9 +709,44 @@ NUCLEUS = ("point", "finite")
 FROZEN_CORE_SPECIAL = ("none", "default")
 
 
+#: The references open-shell components can use: unrestricted Hartree-Fock, or
+#: quasi-restricted orbitals built from it (ROHF is refused by ORCA's canonical
+#: coupled cluster). Closed-shell components are not affected.
+OPEN_SHELL_REFERENCES = ("UHF", "QRO")
+
+
+def effective_reference(data, comp):
+    """The open-shell reference a component runs with: its own ``reference``, else
+    the recipe's ``open_shell_reference``, else None (the program's default)."""
+    return comp.get("reference") or data.get("open_shell_reference")
+
+
+def _with_references(data, components):
+    """The components with their effective open-shell reference filled in, so that
+    the pair check compares what actually runs."""
+    out = {}
+    for name, comp in components.items():
+        ref = effective_reference(data, comp)
+        out[name] = dict(comp, reference=ref) if ref else comp
+    return out
+
+
 def _check_core_and_relativity(data, components):
-    """The frozen-core sets (orbitals per element) and each component's frozen
-    core, relativistic Hamiltonian and nucleus model."""
+    """The frozen-core sets (orbitals per element), the open-shell reference and
+    each component's frozen core, relativistic Hamiltonian and nucleus model."""
+    ref = data.get("open_shell_reference")
+    if ref is not None and ref not in OPEN_SHELL_REFERENCES:
+        raise RecipeError(
+            f"open_shell_reference must be one of {', '.join(OPEN_SHELL_REFERENCES)}, "
+            f"not {ref!r}"
+        )
+    for cname, comp in components.items():
+        ref = comp.get("reference")
+        if ref is not None and ref not in OPEN_SHELL_REFERENCES:
+            raise RecipeError(
+                f"The component '{cname}': reference must be one of "
+                f"{', '.join(OPEN_SHELL_REFERENCES)}, not {ref!r}"
+            )
     sets = data.get("frozen_core_definitions") or {}
     if not isinstance(sets, dict):
         raise RecipeError("'frozen_core_definitions' must be a mapping of name: set")
@@ -836,10 +879,19 @@ def _check_subtracted_pairs(statements, components):
 def component_settings(recipe, comp):
     """The settings a component's program is given beyond its level --
     ``frozen_core`` (orbitals per element, "none" or "default"), ``relativistic``
-    and ``nucleus`` -- and a label for the level that tells them apart, so two
-    components of one level (all electrons and frozen core) are never mixed up."""
+    and ``nucleus``, and the open-shell ``reference`` -- and a label for the level
+    that tells them apart, so two components of one level (all electrons and frozen
+    core) are never mixed up.
+
+    The reference is not in the label: it changes nothing for closed-shell species,
+    whose calculations stay the same (and reusable) whatever a recipe says, and for
+    open-shell species the settings fingerprint of the calculation tells UHF and QRO
+    apart."""
     settings = {}
     label = []
+    ref = effective_reference(recipe.data, comp)
+    if ref:
+        settings["reference"] = ref
     fc = comp.get("frozen_core")
     if fc is not None:
         sets = recipe.data.get("frozen_core_definitions") or {}
