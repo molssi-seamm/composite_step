@@ -59,6 +59,7 @@ FIELDS = {
     "empirical",
     "atoms",
     "allow_mixed_reference",
+    "frozen_core_sources",
     "uncertainty",
     "validation",
 }
@@ -66,7 +67,14 @@ REQUIRED = {"recipe", "version", "geometry", "combine"}
 
 #: Fields that describe a recipe without changing its energy; they are left out
 #: of the fingerprint.
-DESCRIPTIVE = {"description", "reference", "doi", "uncertainty", "validation"}
+DESCRIPTIVE = {
+    "description",
+    "reference",
+    "doi",
+    "uncertainty",
+    "validation",
+    "frozen_core_sources",
+}
 
 #: The fields of a component (one ordinary single point at the recipe's geometry).
 COMPONENT_FIELDS = {
