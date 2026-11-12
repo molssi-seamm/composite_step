@@ -189,7 +189,10 @@ def evaluate_recipe(
     mcs = dict(sorted(mcs.items(), key=lambda item: cost_key(item[1], item[0])))
     options = options or {}
     if directory is None:
-        directory = getattr(node, "directory", None)
+        try:
+            directory = node.directory
+        except Exception:  # no node, or one not placed in a flowchart
+            directory = None
 
     known = set(recipe.data.get("empirical") or {})
     constants = dict(constants or {})

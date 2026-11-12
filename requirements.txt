@@ -2,6 +2,6 @@ seamm
 seamm-util
 seamm-widgets
 pyyaml
-seamm-exec
+seamm-exec>=2026.11.12
 model-chemistry-step
 stevedore
