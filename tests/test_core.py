@@ -209,7 +209,11 @@ def test_decontracted_relativistic_pair(resolved):
     rel = E.component_mc(recipe, "rel")
     assert rel["options"]["decontract"] is True
     assert "|decon|DKH2(point)" in rel["level"]
-    # Decontracting one half only changes the basis as well: refused
+    # Decontracting the relativistic half only changes the basis with the
+    # Hamiltonian, as the cc-pVTZ-DK / cc-pVTZ pair does: allowed
     data["components"]["nonrel"].pop("decontract")
-    with pytest.raises(R.RecipeError, match="differ in basis, relativistic"):
+    R.Recipe.from_dict(data)
+    # ...but not with another frozen core as well
+    data["components"]["nonrel"]["frozen_core"] = "inner"
+    with pytest.raises(R.RecipeError, match="differ in basis, frozen core"):
         R.Recipe.from_dict(data)
