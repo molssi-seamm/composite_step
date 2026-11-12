@@ -58,6 +58,7 @@ FIELDS = {
     "combine",
     "empirical",
     "atoms",
+    "allow_mixed_reference",
     "uncertainty",
     "validation",
 }
@@ -81,6 +82,7 @@ COMPONENT_FIELDS = {
     "sp_shells",
     "convergence",
     "options",  # anything else the code must be told, passed through as given
+    "omit",  # parts deliberately left out, e.g. ["CABS singles"]
 }
 
 
@@ -98,19 +100,72 @@ class ComponentEnergy:
     Parameters
     ----------
     total : float
-        The total energy, E_h.
+        The total energy.
     hf : float, optional
-        The HF (reference) part of a correlated energy, E_h.
+        The HF (reference) part of a correlated energy, in the same unit. Taken
+        from ``parts["HF"]`` when not given.
+    parts : {str: float}, optional
+        The named parts of the energy (the program's ``energy parts``), in the same
+        unit as ``total``.
+    factors : {str: float}, optional
+        Dimensionless factors, e.g. ``"(T) scale f"``.
+    reference : str, optional
+        The reference the correlation is built on: "RHF", "UHF" or "QRO".
     """
 
     total: float
     hf: float = None
+    parts: dict = field(default_factory=dict)
+    factors: dict = field(default_factory=dict)
+    reference: str = None
+
+    def __post_init__(self):
+        if self.hf is None and "HF" in self.parts:
+            self.hf = self.parts["HF"]
 
     @property
     def correlation(self):
+        """The correlation energy alone: E - HF - CABS singles (an F12 run's CABS
+        singles belong to neither the HF part nor the correlation)."""
         if self.hf is None:
             return None
-        return self.total - self.hf
+        return self.total - self.hf - self.parts.get("CABS singles", 0.0)
+
+    def part(self, name):
+        """A named part: stored, or one of :data:`DERIVED_PARTS`."""
+        if name in self.parts:
+            return self.parts[name]
+        if name == "HF" and self.hf is not None:
+            return self.hf
+        if name in DERIVED_PARTS:
+            return DERIVED_PARTS[name](self)
+        raise RecipeError(
+            f"no part '{name}' (the parts are "
+            f"{', '.join(sorted(self.parts)) or 'none'})"
+        )
+
+
+def _scaled_triples(triples):
+    def scaled(c):
+        if "(T) scale f" not in c.factors:
+            raise RecipeError("no (T) scale factor f")
+        return c.factors["(T) scale f"] * c.part(triples)
+
+    return scaled
+
+
+#: Parts computed at use from the stored ones, never stored themselves.
+DERIVED_PARTS = {
+    "CCSD-F12 correlation": lambda c: c.part("CCSD correlation")
+    + c.part("F12 correction"),
+    "DLPNO-CCSD-F12 correlation": lambda c: c.part("DLPNO-CCSD correlation")
+    + c.part("F12 correction"),
+    "HF+CABS": lambda c: c.part("HF") + c.part("CABS singles"),
+    "(T*)": _scaled_triples("(T)"),
+    "DLPNO-(T0*)": _scaled_triples("DLPNO-(T0)"),
+}
+#: The parts that are the reference's energy, whose references must agree
+HF_TYPE_PARTS = {"HF", "HF+CABS"}
 
 
 def cbs_power(e_x, e_y, x, y, alpha=3.0):
@@ -167,9 +222,10 @@ DEGREES = {
     "scale": ((1, 0), 1),
     "hf_part": ((1,), 1),
     "corr_part": ((1,), 1),
+    "part": ((1, 0), 1),
 }
 #: Functions of a component itself, not of its energy.
-PART_FUNCTIONS = {"hf_part", "corr_part"}
+PART_FUNCTIONS = {"hf_part", "corr_part", "part"}
 
 _BINARY = {
     ast.Add: lambda a, b: a + b,
@@ -229,6 +285,19 @@ def _check_expression(node, line):
         if not isinstance(node.func, ast.Name):
             raise RecipeError(f"'combine' line {line}: only plain function calls")
         name = node.func.id
+        if name == "part":
+            if (
+                len(node.args) != 2
+                or node.keywords
+                or not isinstance(node.args[0], ast.Name)
+                or not isinstance(node.args[1], ast.Constant)
+                or not isinstance(node.args[1].value, str)
+            ):
+                raise RecipeError(
+                    f"'combine' line {line}: part() takes a component and the name "
+                    'of a part, e.g. part(ccsdt, "(T)")'
+                )
+            return
         if name in PART_FUNCTIONS:
             if (
                 len(node.args) != 1
@@ -280,7 +349,24 @@ def _names_used(node):
     return plain, parts
 
 
-def evaluate(statements, components, constants=None):
+def parts_used(statements):
+    """{component: set of what is used of it}: "hf_part", "corr_part" and the
+    names given to part()."""
+    used = {}
+    for _, node in statements:
+        for sub in ast.walk(node):
+            if (
+                isinstance(sub, ast.Call)
+                and isinstance(sub.func, ast.Name)
+                and sub.func.id in PART_FUNCTIONS
+            ):
+                which = sub.args[0].id
+                what = sub.func.id if sub.func.id != "part" else sub.args[1].value
+                used.setdefault(which, set()).add(what)
+    return used
+
+
+def evaluate(statements, components, constants=None, allow_mixed_reference=False):
     """Evaluate parsed ``combine`` statements.
 
     Parameters
@@ -291,6 +377,9 @@ def evaluate(statements, components, constants=None):
         The energies of the components (and of the geometry level), E_h.
     constants : {str: float}, optional
         Other named values: empirical terms, spin-orbit, E_h.
+    allow_mixed_reference : bool
+        Allow HF-type parts of components with different references (RHF, UHF,
+        QRO) in one combination; refused otherwise.
 
     Returns
     -------
@@ -304,6 +393,7 @@ def evaluate(statements, components, constants=None):
     values = {k: c.total for k, c in comps.items()}
     values.update(constants or {})
     results = {}
+    references = {}
 
     def ev(node):
         if isinstance(node, ast.Constant):
@@ -322,14 +412,24 @@ def evaluate(statements, components, constants=None):
                 which = node.args[0].id
                 if which not in comps:
                     raise RecipeError(f"'combine': {name}() of unknown '{which}'")
-                part = (
-                    comps[which].hf if name == "hf_part" else comps[which].correlation
-                )
-                if part is None:
+                component = comps[which]
+                if name == "part":
+                    wanted = node.args[1].value
+                    try:
+                        value = component.part(wanted)
+                    except RecipeError as e:
+                        raise RecipeError(f"'combine': the component '{which}': {e}")
+                    if wanted in HF_TYPE_PARTS:
+                        references[which] = component.reference
+                    return value
+                value = component.hf if name == "hf_part" else component.correlation
+                if value is None:
                     raise RecipeError(
                         f"'combine': the component '{which}' has no HF part"
                     )
-                return part
+                if name == "hf_part":
+                    references[which] = component.reference
+                return value
             function = FUNCTIONS[name][0]
             args = [ev(a) for a in node.args]
             kwargs = {kw.arg: ev(kw.value) for kw in node.keywords}
@@ -342,6 +442,13 @@ def evaluate(statements, components, constants=None):
         values[name] = value
     if "E0" not in results:
         raise RecipeError("'combine' must define E0")
+    kinds = {r for r in references.values() if r is not None}
+    if len(kinds) > 1 and not allow_mixed_reference:
+        raise RecipeError(
+            "'combine' uses the HF parts of components with different references ("
+            + ", ".join(f"{k} {references[k]}" for k in sorted(references))
+            + "); say 'allow_mixed_reference: true' in the recipe if that is meant"
+        )
     return results
 
 
@@ -408,7 +515,18 @@ class Recipe:
         ``components`` must include the geometry level's energy as ``geometry``
         when the combination uses it.
         """
-        return evaluate(self.statements, components, constants)
+        return evaluate(
+            self.statements,
+            components,
+            constants,
+            allow_mixed_reference=bool(self.data.get("allow_mixed_reference")),
+        )
+
+    @property
+    def needs_parts(self):
+        """The components whose parts ``combine`` uses (hf_part, corr_part,
+        part)."""
+        return set(parts_used(self.statements))
 
     def thermal(self, E0, geometry):
         """H(0 K) and H(T) from E0 and the frequency level's values.
@@ -534,6 +652,24 @@ def validate(data):
                 f"'combine': '{target}' is not an energy (it scales as energy^"
                 f"{degrees[target]}); every result must scale like an energy, so "
                 "that it is the same in any unit"
+            )
+
+    # An F12 component split into hf_part + corr_part must account for its CABS
+    # singles, which belong to neither
+    for which, used in parts_used(statements).items():
+        comp = components.get(which)
+        if comp is None or not {"hf_part", "corr_part"} <= used:
+            continue
+        level = str(comp.get("level") or comp.get("method") or "")
+        if "F12" not in level.upper():
+            continue
+        omitted = comp.get("omit") or []
+        if "CABS singles" not in used and "CABS singles" not in omitted:
+            raise RecipeError(
+                f"The component '{which}' is an F12 calculation split with hf_part "
+                "and corr_part, which leave out its CABS singles: add "
+                f'part({which}, "CABS singles"), or say omit: ["CABS singles"] '
+                "for the component"
             )
 
     requires = data.get("requires") or []

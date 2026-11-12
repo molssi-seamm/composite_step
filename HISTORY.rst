@@ -1,6 +1,20 @@
 =======
 History
 =======
+2026.11.12.1 -- Recipes that use the parts of an energy
+    * Recipes can use the parts of a component's energy: ``part(c, "name")`` for
+      the HF energy, the CABS singles, the correlation energies and the triples that
+      the program reports, and parts derived from them (the CCSD-F12 correlation, the
+      scaled triples (T*), ...). ``hf_part(c)`` is the HF energy and ``corr_part(c)``
+      the correlation alone, so a recipe can, for example, extrapolate the
+      correlation energy and not the HF energy.
+    * A recipe that splits an F12 calculation into HF and correlation must account
+      for its CABS singles, and the HF parts of components with different references
+      cannot be combined unless the recipe allows it; such recipes are refused when
+      they are read.
+    * A stored energy without the parts a recipe needs is computed again; parts are
+      never derived.
+
 2026.11.12 -- Recipes that combine several calculations run in every step
     * A composite recipe that combines several calculations now runs wherever a
       model chemistry is used: the Energy step, the Thermochemistry step's CBH
