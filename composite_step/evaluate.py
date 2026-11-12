@@ -137,6 +137,8 @@ def component_mc(recipe, source, available=None):
                 kind = fc if fc in ("none", "default") else "per-element"
                 if kind not in capabilities.get("frozen_core", ()):
                     problems.append(f"it cannot take a {kind} frozen core")
+            if settings.get("decontract") and not capabilities.get("decontract"):
+                problems.append("it cannot decontract the basis")
             rel = settings.get("relativistic")
             if rel is not None:
                 if rel not in capabilities.get("relativistic", ()):

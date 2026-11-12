@@ -112,6 +112,7 @@ CAPABILITIES = {
     "frozen_core": ["default", "none", "per-element"],
     "relativistic": ["none", "DKH2", "X2C"],
     "nucleus": ["point", "finite"],
+    "decontract": True,
     "energy parts": True,
 }
 
@@ -185,3 +186,30 @@ def test_capabilities_are_checked(monkeypatch):
     monkeypatch.setattr(E, "resolve_level", says_nothing)
     with pytest.raises(R.RecipeError, match="does not say what settings"):
         E.component_mc(recipe, "cv_ae")
+
+
+def test_decontracted_relativistic_pair(resolved):
+    """A relativistic correction with the same decontracted basis in both halves
+    (where no DK basis exists): one change, the Hamiltonian."""
+    data = tier_a(
+        rel={
+            "level": "ORCA:QC@CCSD(T)/cc-pVTZ",
+            "decontract": True,
+            "frozen_core": "valence",
+            "relativistic": "DKH2",
+            "nucleus": "point",
+        },
+        nonrel={
+            "level": "ORCA:QC@CCSD(T)/cc-pVTZ",
+            "decontract": True,
+            "frozen_core": "valence",
+        },
+    )
+    recipe = R.Recipe.from_dict(data)
+    rel = E.component_mc(recipe, "rel")
+    assert rel["options"]["decontract"] is True
+    assert "|decon|DKH2(point)" in rel["level"]
+    # Decontracting one half only changes the basis as well: refused
+    data["components"]["nonrel"].pop("decontract")
+    with pytest.raises(R.RecipeError, match="differ in basis, relativistic"):
+        R.Recipe.from_dict(data)

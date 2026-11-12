@@ -87,6 +87,7 @@ COMPONENT_FIELDS = {
     "density_fitting",
     "relativistic",
     "nucleus",  # point | finite, required with a relativistic Hamiltonian
+    "decontract",  # true: the orbital basis decontracted
     "f12",
     "sp_shells",
     "convergence",
@@ -718,6 +719,8 @@ def _check_core_and_relativity(data, components):
                 "integer, 0 or more) for each element"
             )
     for cname, comp in components.items():
+        if comp.get("decontract") not in (None, True, False):
+            raise RecipeError(f"The component '{cname}': decontract is true or false")
         fc = comp.get("frozen_core")
         if fc is not None and fc not in FROZEN_CORE_SPECIAL and fc not in sets:
             raise RecipeError(
@@ -760,7 +763,7 @@ def _differences(a, b):
     (ma, ba), (mb, bb) = _level_parts(a), _level_parts(b)
     if ma != mb:
         kinds.add("method")
-    if ba != bb:
+    if (ba, bool(a.get("decontract"))) != (bb, bool(b.get("decontract"))):
         kinds.add("basis")
     if a.get("frozen_core") != b.get("frozen_core"):
         kinds.add("frozen core")
@@ -781,6 +784,7 @@ def _differences(a, b):
         "nucleus",
         "method",
         "basis",
+        "decontract",
     }
     for key in (set(a) | set(b)) - skip:
         if a.get(key) != b.get(key):
@@ -841,12 +845,15 @@ def component_settings(recipe, comp):
         sets = recipe.data.get("frozen_core_definitions") or {}
         settings["frozen_core"] = sets.get(fc, fc)
         label.append(f"fc={frozen_core_key(settings['frozen_core'])}")
+    if comp.get("decontract"):
+        settings["decontract"] = True
+        label.append("decon")
     rel = comp.get("relativistic", "none")
     if rel != "none":
         settings["relativistic"] = rel
         settings["nucleus"] = comp["nucleus"]
         label.append(f"{rel}({comp['nucleus']})")
-    # A fixed order: the frozen core, then the Hamiltonian
+    # A fixed order: the frozen core, the basis, then the Hamiltonian
     return settings, "".join(f"|{x}" for x in label)
 
 
