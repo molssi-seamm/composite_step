@@ -409,3 +409,25 @@ def test_make_evaluator_for_several_components(monkeypatch):
     mc = {"level": "SEAMM:CMP@two", "method": "two", "options": {}}
     evaluator = CompositeStep.make_evaluator(None, mc, properties=("energy",))
     assert isinstance(evaluator, E.CompositeEvaluator)
+
+
+def test_a_user_recipe_is_found_from_its_path(tmp_path):
+    (tmp_path / "mine.yaml").write_text(
+        "recipe: mine\nversion: 2\ngeometry: {level: 'A:DFT@GEOM/b'}\n"
+        "components:\n  a: {level: 'A:QC@MP2/large'}\n  b: {level: 'A:QC@MP2/small'}\n"
+        "combine: |\n  E0 = a - b\n"
+    )
+    mc = {
+        "level": "SEAMM:CMP@mine",
+        "method": "mine",
+        "options": {
+            "recipe": "mine",
+            "recipe_version": 2,
+            "recipe_source": "user",
+            "recipe_path": str(tmp_path / "mine.yaml"),
+        },
+    }
+    recipe = E._recipe_of(mc)
+    assert recipe.name == "mine" and recipe.version == 2
+    with pytest.raises(KeyError):
+        E._recipe_of(dict(mc, options=dict(mc["options"], recipe_version=3)))

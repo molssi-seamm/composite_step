@@ -384,13 +384,26 @@ def composite_data(recipe, model_chemistry, components, results):
 
 
 def _recipe_of(model_chemistry, data_path=None):
-    from .recipes import RecipeLibrary
+    """The recipe of a ``SEAMM:CMP@`` model chemistry: from the library (shipped,
+    and the ``recipes`` directories of ``data_path``), else from the file that
+    model-chemistry discovery found it in (``recipe_path`` in its options), so a
+    user's or a job's recipe is found wherever the model chemistry is run."""
+    from .recipes import RecipeLibrary, load_recipe
 
     options = model_chemistry.get("options") or {}
     name = options.get("recipe") or model_chemistry.get("method")
     version = options.get("recipe_version")
     extra = [Path(p) / "recipes" for p in (data_path or ())]
-    return RecipeLibrary(extra_directories=extra).get(name, version)
+    try:
+        return RecipeLibrary(extra_directories=extra).get(name, version)
+    except KeyError:
+        path = options.get("recipe_path")
+        if not path or not Path(path).is_file():
+            raise
+        recipe = load_recipe(path, source=options.get("recipe_source", "user"))
+        if recipe.name != name or (version is not None and recipe.version != version):
+            raise
+        return recipe
 
 
 def delegate(model_chemistry):

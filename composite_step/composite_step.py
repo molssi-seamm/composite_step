@@ -95,6 +95,7 @@ class CompositeStep(object):
                 "recipe": recipe.name,
                 "recipe_version": recipe.version,
                 "recipe_source": recipe.source,
+                "recipe_path": str(recipe.path) if recipe.path else None,
                 "geometry_level": recipe.geometry.get("level"),
                 "components": {k: v.get("level") for k, v in recipe.components.items()},
                 "zpe_scale": scale,
@@ -176,7 +177,7 @@ class CompositeStep(object):
         recipe, which runs as its component's own tasks."""
         from .evaluate import CompositeEvaluator, _recipe_of, single_source
 
-        recipe = _recipe_of(model_chemistry)
+        recipe = _recipe_of(model_chemistry, getattr(node, "data_path", None))
         if single_source(recipe) is not None:
             return None
         return CompositeEvaluator(node, model_chemistry, recipe, **kwargs)
