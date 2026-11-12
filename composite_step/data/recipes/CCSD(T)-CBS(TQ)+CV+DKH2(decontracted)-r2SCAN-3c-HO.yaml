@@ -1,0 +1,61 @@
+recipe: CCSD(T)-CBS(TQ)+CV+DKH2(decontracted)-r2SCAN-3c-HO
+version: 1
+description: >-
+  Tier-A computed reference values without F12 for species containing Ca, which
+  has no DK-recontracted basis. As CCSD(T)-CBS(TQ)+CV+DKH2-r2SCAN-3c-HO, but the
+  scalar relativistic correction is DKH2 (point nucleus) minus the
+  non-relativistic calculation, both with the same decontracted cc-pVTZ.
+  Validated against the cc-pVTZ-DK pair (2026-11-12): CO + 3 H2 -> CH4 + H2O and
+  CO2 + 4 H2 -> CH4 + 2 H2O within 0.003 kJ/mol, GeH4 -> GeH2 + H2 within
+  0.06 kJ/mol. X2C with x2c-TZVPall was not used: on CaH2 its relativistic
+  contribution to the atomization energy differed from decontracted DKH2 by
+  0.82 kJ/mol (-3.91 vs -3.09 kJ/mol), likely from x2c-TZVPall's small Ca set.
+reference: >-
+  After W4 (Karton, Rabinovich, Martin, Ruscic, J. Chem. Phys. 125, 144108
+  (2006)) without its F12 and post-CCSD(T) steps. The nucleus model is point:
+  our explicit choice; W4 does not state one.
+geometry:
+  level: ORCA:CMP@R2SCAN-3C
+frequencies:
+  scale_zpe: 0.9899
+  scale_source: >-
+    fitted to the anharmonic ZPVEs of 22 W4-2006 molecules (SEAMM, 2026-11);
+    seamm_thermochemistry's ZPE table for R2SCAN-3C
+frozen_core_definitions:
+  # Frozen orbitals per element. valence: the cc-pVnZ convention; inner: the
+  # cc-pwCVnZ convention (the outer core correlated).
+  valence: {H: 0, Li: 1, Be: 1, B: 1, C: 1, N: 1, O: 1, F: 1, Ne: 1, Na: 5, Mg: 5, Al: 5, Si: 5, P: 5, S: 5, Cl: 5, Ar: 5, Ca: 9, Ga: 14, Ge: 14, As: 14, Se: 14, Br: 14}
+  inner: {H: 0, Li: 0, Be: 0, B: 0, C: 0, N: 0, O: 0, F: 0, Ne: 0, Na: 1, Mg: 1, Al: 1, Si: 1, P: 1, S: 1, Cl: 1, Ar: 1, Ca: 5, Ga: 5, Ge: 5, As: 5, Se: 5, Br: 5}
+frozen_core_sources:
+  Ca: "convention: the cc-pVnZ valence (1s-3p frozen) and cc-pwCVnZ outer-core (3s3p correlated) conventions; Koput and Peterson, JPCA 106, 9595 (2002) give details only for cc-pVQZ and cc-pV5Z (Basis Set Exchange notes). No DK basis: decontracted cc-pVTZ, validated on CO + 3 H2, CO2 + 4 H2 (W4) and GeH4 -> GeH2 + H2"
+  H: "nothing to freeze"
+  Li, Be: "verified: Prascher, Woon, Peterson, Dunning, Wilson, TCA 128, 69 (2011), sections 3.1 and 3.4, Fig. 1 and 5 captions: cc-pVnZ freeze 1s; cc-pwCVnZ correlate all electrons"
+  B-Ne: "verified: W4 (Karton et al., JCP 125, 144108 (2006)) freezes 1s in the valence steps; cc-pwCVnZ correlate all electrons"
+  Na, Mg: "verified: Prascher et al. 2011, section 3.4: cc-pVnZ freeze 1s2s2p; cc-pwCVnZ correlate 2s2p, 'correlation of the 1s2 electrons of Na and Mg is not included'"
+  Al-Ar: "verified: W4 freezes 1s2s2p in the valence steps; inner keeps 1s frozen (Martin and Parthiban, W1/W2 review, arXiv physics/0511008, section 2.5)"
+  Ga-Br: "verified: the cc-pVnZ sets are intended for a 14-orbital frozen core (1s-3d; Basis Set Exchange notes, Wilson et al. 1999); the cc-pwCVnZ sets are optimal for 3s3p3d correlation (DeYonker, Peterson and Wilson, JPCA 111, 11383 (2007))"
+components:
+  tz:
+    level: ORCA:QC@CCSD(T)/cc-pVTZ
+    frozen_core: valence
+  qz:
+    level: ORCA:QC@CCSD(T)/cc-pVQZ
+    frozen_core: valence
+  cv_ae:
+    level: ORCA:QC@CCSD(T)/cc-pwCVTZ
+    frozen_core: inner
+  cv_fc:
+    level: ORCA:QC@CCSD(T)/cc-pwCVTZ
+    frozen_core: valence
+  rel:
+    level: ORCA:QC@CCSD(T)/cc-pVTZ
+    decontract: true
+    frozen_core: valence
+    relativistic: DKH2
+    nucleus: point
+  nonrel:
+    level: ORCA:QC@CCSD(T)/cc-pVTZ
+    decontract: true
+    frozen_core: valence
+combine: |
+  E0 = hf_part(qz) + cbs_power(corr_part(tz), corr_part(qz), 3, 4) + (cv_ae - cv_fc) + (rel - nonrel)
