@@ -89,6 +89,7 @@ class CompositeStep(object):
                 "periodic": False,
                 "mdi_capable": False,
                 "analytic_hessian": False,
+                "properties": ["energy"],
                 "parallel_tasks": True,
                 "prefers_batch": True,
                 "recipe": recipe.name,
@@ -136,16 +137,49 @@ class CompositeStep(object):
 
     @classmethod
     def expected_fingerprints(cls, configuration, model_chemistry, **kwargs):
-        """The component's own expected fingerprints, for a one-energy recipe."""
-        from .evaluate import delegate
+        """For a one-energy recipe, the fingerprints of the composite record its
+        result carries (:func:`composite_step.evaluate.composite_record`), one for
+        each fingerprint the component's program predicts. None for a recipe that
+        combines several calculations: those are stored as their components."""
+        from .evaluate import composite_record, delegate
         from .recipes import RecipeError
 
         try:
-            _, _, mc, provider = delegate(model_chemistry)
+            recipe, source, mc, provider = delegate(model_chemistry)
         except RecipeError:
             return None
         predict = getattr(provider, "expected_fingerprints", None)
-        return None if predict is None else predict(configuration, mc, **kwargs)
+        if predict is None:
+            return None
+        predicted = predict(configuration, mc, **kwargs)
+        if predicted is None:
+            return None
+        return [
+            composite_record(
+                recipe,
+                model_chemistry,
+                {
+                    source: {
+                        "record": {"fingerprint": fp},
+                        "model_chemistry": mc["level"],
+                    }
+                },
+            )["fingerprint"]
+            for fp in predicted
+        ]
+
+    @classmethod
+    def make_evaluator(cls, node, model_chemistry, **kwargs):
+        """The evaluator for a recipe that combines several calculations
+        (:class:`composite_step.evaluate.CompositeEvaluator`), which
+        ``seamm_exec.Evaluator(...)`` returns in its place; None for a one-energy
+        recipe, which runs as its component's own tasks."""
+        from .evaluate import CompositeEvaluator, _recipe_of, single_source
+
+        recipe = _recipe_of(model_chemistry)
+        if single_source(recipe) is not None:
+            return None
+        return CompositeEvaluator(node, model_chemistry, recipe, **kwargs)
 
     def create_node(self, flowchart=None, **kwargs):
         """Create and return the new node object.

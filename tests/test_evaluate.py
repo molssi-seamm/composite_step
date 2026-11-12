@@ -50,8 +50,10 @@ class FakeEvaluator:
     def __exit__(self, *args):
         return False
 
-    def submit(self, configuration, key):
+    def submit(self, configuration, key, options=None):
         self.submitted.append(key)
+        self.options = getattr(self, "options", {})
+        self.options[key] = options
 
     def results(self):
         for key in self.submitted:
@@ -215,11 +217,15 @@ def test_delegated_task_route(delegated):
     assert task == ("task", level, "k1")
     data = CompositeStep.analyze_task(None, mc, object(), properties=("energy",))
     assert data["energy"] == -123.25
-    assert data["calculation"] == {"fingerprint": "fp"}
-    assert data["composite"]["component model chemistry"] == level
+    record = data["calculation"]
+    assert record["program"] == "SEAMM composite"
+    assert record["components"]["revdsd"]["record"] == {"fingerprint": "fp"}
+    assert data["composite"]["components"]["revdsd"]["model chemistry"] == level
     assert data["composite"]["recipe"] == "revDSD-r2SCAN-3c-HO"
-    assert CompositeStep.expected_fingerprints(object(), mc) == ["fp"]
+    # The prediction is the composite record's fingerprint, as stored
+    assert CompositeStep.expected_fingerprints(object(), mc) == [record["fingerprint"]]
     assert CompositeStep.can_run_task(object(), mc) is True
+    assert CompositeStep.make_evaluator(None, mc) is None
 
 
 def test_no_gradients_yet(delegated):
@@ -252,3 +258,154 @@ def test_several_components_refuse_the_one_task_route(tmp_path, monkeypatch):
     assert CompositeStep.can_run_task(object(), mc) is False
     with pytest.raises(R.RecipeError, match="combines several calculations"):
         CompositeStep.get_task(object(), mc, key="k")
+
+
+# -- the evaluator of a multi-component recipe ------------------------------------
+
+
+def two_point():
+    """A recipe with a cheap and an expensive component, no empirical terms."""
+    return R.Recipe.from_dict(
+        {
+            "recipe": "two",
+            "version": 1,
+            "geometry": {"level": "A:DFT@GEOM/b"},
+            "components": {
+                "ccsdt": {"level": "A:QC@CCSD(T)/small"},
+                "mp2_large": {"level": "A:QC@MP2/large"},
+                "mp2_small": {"level": "A:QC@MP2/small"},
+            },
+            "combine": "E0 = ccsdt + (mp2_large - mp2_small)\n",
+        }
+    )
+
+
+@pytest.fixture
+def composite(monkeypatch):
+    FakeEvaluator.calls = []
+    made = []
+
+    def factory(node, mc, properties, directory, name):
+        evaluator = FakeEvaluator(node, mc, properties, directory, name)
+        made.append(evaluator)
+        return evaluator
+
+    def make(**kwargs):
+        mc = {"level": "SEAMM:CMP@two", "method": "two", "options": {}}
+        return E.CompositeEvaluator(
+            None,
+            mc,
+            two_point(),
+            properties=("energy",),
+            directory="/job/3",
+            available=AVAILABLE,
+            evaluator_factory=factory,
+            **kwargs,
+        )
+
+    return make, made
+
+
+def test_composite_evaluator(composite):
+    make, made = composite
+    with make() as evaluator:
+        evaluator.submit("conf1", key="s1", options={"charge": 0})
+        evaluator.submit("conf2", key="s2")
+        results = {r.key: r for r in evaluator.results()}
+    # Cheapest first: MP2 before CCSD(T); each component in its own directory
+    levels = [c[0] for c in FakeEvaluator.calls]
+    assert levels.index("A:QC@CCSD(T)/small") > levels.index("A:QC@MP2/large")
+    assert {str(c[1]) for c in FakeEvaluator.calls} == {
+        "/job/3/ccsdt",
+        "/job/3/mp2_large",
+        "/job/3/mp2_small",
+    }
+    # Per-structure options reach every component
+    assert all(e.options["s1"] == {"charge": 0} for e in made)
+    r1 = results["s1"]
+    assert r1.ok and r1.energy == pytest.approx(-1000.0 + (-1010.0 + 995.0))
+    assert r1.data["energy"] == r1.energy
+    assert r1.data["composite"]["recipe"] == "two"
+    assert r1.data["calculation"]["components"]["ccsdt"]["fingerprint"] == "fp:s1"
+    assert results["s2"].ok
+    # Nothing is computed twice
+    assert list(evaluator.results()) == []
+
+
+def test_failed_component_skips_the_rest(composite, monkeypatch):
+    make, made = composite
+    monkeypatch.setitem(ENERGIES, "A:QC@MP2/small", {"s1": -995.0})
+    with make() as evaluator:
+        evaluator.submit("conf1", key="s1")
+        evaluator.submit("conf2", key="s2")
+        results = {r.key: r for r in evaluator.results()}
+    assert not results["s2"].ok
+    assert "mp2_small" in results["s2"].reason
+    # s2 failed its cheap component and never went to CCSD(T)
+    ccsdt = [e for e in made if e.mc["level"] == "A:QC@CCSD(T)/small"][0]
+    assert ccsdt.submitted == ["s1"]
+
+
+def test_same_form_on_both_routes(composite, delegated):
+    from composite_step import CompositeStep
+
+    make, _ = composite
+    with make() as evaluator:
+        evaluator.submit("conf1", key="s1")
+        (result,) = [r for r in evaluator.results() if r.key == "s1"]
+    mc, _ = delegated
+    data = CompositeStep.analyze_task(None, mc, object(), properties=("energy",))
+    assert set(result.data) == set(data) >= {"energy", "composite", "calculation"}
+    assert set(result.data["composite"]) == set(data["composite"])
+    assert set(result.data["calculation"]) == set(data["calculation"])
+
+
+def test_composite_record_fingerprint():
+    recipe = two_point()
+    mc = {"level": "SEAMM:CMP@two"}
+
+    def record(fp):
+        components = {
+            name: {"record": {"fingerprint": fp + name}, "model_chemistry": name}
+            for name in recipe.components
+        }
+        return E.composite_record(recipe, mc, components)["fingerprint"]
+
+    assert record("a") == record("a")
+    assert record("a") != record("b")
+
+
+def test_composite_evaluator_refuses_gradients(composite):
+    make, _ = composite
+    with pytest.raises(ValueError, match="energies only"):
+        E.CompositeEvaluator(
+            None,
+            {"level": "SEAMM:CMP@two"},
+            two_point(),
+            properties=("energy", "gradients"),
+        )
+
+
+def test_structure_dependent_empirical_terms_are_refused():
+    with pytest.raises(R.RecipeError, match="depends on the structure"):
+        E.CompositeEvaluator(
+            None, {"level": "SEAMM:CMP@toy"}, g4mp2_like(), properties=("energy",)
+        )
+
+
+def test_cancel(composite):
+    make, _ = composite
+    evaluator = make()
+    evaluator.submit("conf1", key="s1")
+    evaluator.cancel()
+    (result,) = list(evaluator.results())
+    assert not result.ok and result.reason == "cancelled"
+
+
+def test_make_evaluator_for_several_components(monkeypatch):
+    from composite_step import CompositeStep
+
+    monkeypatch.setattr(E, "_recipe_of", lambda mc, data_path=None: two_point())
+    mc = {"level": "SEAMM:CMP@two", "method": "two", "options": {}}
+    evaluator = CompositeStep.make_evaluator(None, mc, properties=("energy",))
+    assert isinstance(evaluator, E.CompositeEvaluator)

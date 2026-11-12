@@ -19,6 +19,7 @@ component's energy, with no unit conversion of it.
 """
 
 from dataclasses import dataclass, field
+import json
 import logging
 from pathlib import Path
 
@@ -138,8 +139,13 @@ def evaluate_recipe(
     available=None,
     evaluator_factory=None,
     name="Composite",
+    options=None,
 ):
     """The composite energy of each structure.
+
+    The components run one after another, cheapest first (:func:`cost_key`),
+    each over all the structures at once. A structure that fails a component is
+    not sent to the later ones.
 
     Parameters
     ----------
@@ -162,6 +168,9 @@ def evaluate_recipe(
         Makes the evaluators, ``factory(node, mc, properties=, directory=,
         name=)``; seamm_exec.Evaluator by default (tests replace it).
     name : str
+    options : {str: dict}, optional
+        Per structure (by key), the options it is submitted with to every
+        component (``charge``, ``multiplicity``, ``atom_indices``, ...).
 
     Returns
     -------
@@ -175,6 +184,10 @@ def evaluate_recipe(
 
     levels = component_levels(recipe)
     mcs = {source: resolve_level(level, available) for source, level in levels.items()}
+    mcs = dict(sorted(mcs.items(), key=lambda item: cost_key(item[1], item[0])))
+    options = options or {}
+    if directory is None:
+        directory = getattr(node, "directory", None)
 
     known = set(recipe.data.get("empirical") or {})
     constants = dict(constants or {})
@@ -214,7 +227,7 @@ def evaluate_recipe(
             name=f"{name}_{source}",
         ) as evaluator:
             for key in to_run:
-                evaluator.submit(structures[key], key=key)
+                evaluator.submit(structures[key], key=key, options=options.get(key))
             for result in evaluator.results():
                 composite = out[result.key]
                 if not result.ok or result.energy is None:
@@ -248,6 +261,123 @@ def evaluate_recipe(
             continue
         composite.E0 = composite.results["E0"]
     return out
+
+
+#: Rough relative cost of a model chemistry's type and method, for ordering the
+#: components: a structure that fails a cheap component then never pays for an
+#: expensive one.
+_TYPE_COST = {"FF": 0, "SQM": 1, "MLFF": 1, "DFT": 2, "CMP": 2, "QC": 3}
+_METHOD_COST = (
+    ("CCSDT", 9),
+    ("CCSD(T)", 7),
+    ("QCISD(T)", 7),
+    ("CCSD", 6),
+    ("MP4", 5),
+    ("MP3", 4),
+    ("MP2", 3),
+    ("HF", 1),
+)
+
+
+def cost_key(model_chemistry, name=""):
+    """A sort key that puts cheap components first: the type, the method
+    (DLPNO cheaper, F12 dearer), then the basis set's cardinal number."""
+    level = str(model_chemistry.get("level") or "")
+    owner_type, _, rest = level.partition("@")
+    mtype = owner_type.split(":")[-1].upper()
+    method, _, basis = rest.partition("/")
+    method = method.upper()
+    cost = 0.0
+    for word, value in _METHOD_COST:
+        if word in method:
+            cost = value
+            break
+    if "DLPNO" in method:
+        cost -= 2.5
+    if "F12" in method:
+        cost += 1.5
+    cardinal = 0
+    upper = basis.upper()
+    for letter, n in (("D", 2), ("T", 3), ("Q", 4), ("5", 5), ("6", 6)):
+        if (
+            f"V{letter}Z" in upper
+            or f"-{letter}ZVP" in upper
+            or f"{letter}ZVP" in upper
+        ):
+            cardinal = n
+    return (_TYPE_COST.get(mtype, 2), cost, cardinal, name)
+
+
+def composite_record(recipe, model_chemistry, components):
+    """The calculation record of a composite energy, in the form of a code's
+    (:func:`seamm_util.fingerprint.calculation_record`): its fingerprint hashes the
+    recipe's fingerprint and every component's settings fingerprint, so equal
+    fingerprints mean the same recipe of the same calculations. The components'
+    own records are kept under ``components``.
+
+    Parameters
+    ----------
+    components : {str: dict}
+        Per component, its ``record`` (the code's calculation record, or None
+        when the energy came from a store or an earlier run without one) and
+        ``model_chemistry``.
+    """
+    from seamm_util.fingerprint import calculation_record
+
+    fingerprints = {
+        source: (c.get("record") or {}).get("fingerprint")
+        for source, c in components.items()
+    }
+    record = calculation_record(
+        "SEAMM composite",
+        str(recipe.version),
+        {
+            "recipe": recipe.fingerprint(),
+            "components": json.dumps(fingerprints, sort_keys=True),
+        },
+        hashed_version=str(recipe.version),
+    )
+    geometry = {
+        (c.get("record") or {}).get("geometry fingerprint") for c in components.values()
+    } - {None}
+    record["geometry fingerprint"] = geometry.pop() if len(geometry) == 1 else None
+    record["recipe"] = recipe.name
+    record["model chemistry"] = model_chemistry.get("level")
+    record["components"] = {
+        source: {
+            "model chemistry": c.get("model_chemistry"),
+            "fingerprint": fingerprints[source],
+            "record": c.get("record"),
+        }
+        for source, c in components.items()
+    }
+    return record
+
+
+def composite_data(recipe, model_chemistry, components, results):
+    """``data`` as consumers get it on either route: ``energy`` (E0, kJ/mol),
+    ``composite`` (the recipe, the components' energies and how they were
+    obtained, every value ``combine`` defines) and ``calculation`` (the composite
+    record, :func:`composite_record`)."""
+    return {
+        "energy": results["E0"],
+        "composite": {
+            "recipe": recipe.name,
+            "version": recipe.version,
+            "fingerprint": recipe.fingerprint(),
+            "model chemistry": model_chemistry.get("level"),
+            "components": {
+                source: {
+                    "energy": c["energy"],
+                    "how": c.get("how", "computed"),
+                    "model chemistry": c.get("model_chemistry"),
+                }
+                for source, c in components.items()
+            },
+            "results": dict(results),
+        },
+        "calculation": composite_record(recipe, model_chemistry, components),
+    }
 
 
 # -- The single-component task route for any consumer of a model chemistry ---------
@@ -318,14 +448,232 @@ def delegated_analyze_task(result, model_chemistry, configuration, **kwargs):
     energy = data.get("energy")
     if energy is not None:
         results = recipe.combine({source: energy})
-        data["component energy"] = energy
-        data["energy"] = results["E0"]
-        data["composite"] = {
-            "recipe": recipe.name,
-            "version": recipe.version,
-            "fingerprint": recipe.fingerprint(),
-            "component": source,
-            "component model chemistry": mc["level"],
-            "results": results,
+        record = data.get("calculation")
+        components = {
+            source: {
+                "energy": energy,
+                "how": "computed",
+                "record": record if isinstance(record, dict) else None,
+                "model_chemistry": mc["level"],
+            }
         }
+        data.update(composite_data(recipe, model_chemistry, components, results))
     return data
+
+
+# -- The evaluator of a multi-component recipe, for every consumer ------------------
+
+
+class CompositeEvaluator:
+    """Evaluates a composite model chemistry at many structures, with the
+    interface of :class:`seamm_exec.Evaluator`, which returns it from
+    ``Evaluator(...)`` through :meth:`CompositeStep.make_evaluator` when the recipe
+    combines several calculations.
+
+    Each component runs as an ordinary Evaluator of its own program, over all the
+    submitted structures (:func:`evaluate_recipe`), with that program's own
+    resources: a consumer's ``resources`` are not passed on, since an F12
+    component needs other memory than a DFT one. The job's target and the task
+    set's options are passed on.
+
+    Energies only: a composite has no gradients or stress yet.
+
+    The arguments ``node``, ``model_chemistry``, ``properties``, ``path``,
+    ``directory``, ``target``, ``task_set_options``, ``resources`` and ``name`` are
+    as for :class:`seamm_exec.Evaluator`. ``path`` (for tests only) is passed to
+    every component's evaluator; otherwise each chooses its own.
+
+    Parameters
+    ----------
+    recipe : composite_step.recipes.Recipe, optional
+        Default: the model chemistry's.
+    component_lookup : callable, optional
+        ``lookup(source, model_chemistry, key, configuration)`` -> ``(energy
+        kJ/mol, how)`` or None: a component energy the consumer already has
+        (a fragment store, an earlier run), which is then not computed.
+    available : dict, optional
+        The discovered model chemistries.
+    evaluator_factory : callable, optional
+        For tests: makes the components' evaluators.
+    """
+
+    path = "batch"
+    mdi_capable = False
+
+    def __init__(
+        self,
+        node,
+        model_chemistry=None,
+        recipe=None,
+        *,
+        properties=("energy", "gradients"),
+        path=None,
+        directory=None,
+        target=None,
+        task_set_options=None,
+        resources=None,
+        name="Composite",
+        component_lookup=None,
+        available=None,
+        evaluator_factory=None,
+    ):
+        if model_chemistry is None:
+            model_chemistry = node.get_variable("_model_chemistry")
+        self.node = node
+        self.model_chemistry = model_chemistry
+        self.options = model_chemistry.get("options") or {}
+        self.recipe = recipe if recipe is not None else _recipe_of(model_chemistry)
+        self.properties = tuple(properties)
+        extra = sorted(set(self.properties) - {"energy"})
+        if extra:
+            raise ValueError(
+                f"The composite method {model_chemistry.get('level')} gives energies "
+                f"only; it cannot give {' or '.join(extra)}."
+            )
+        self._path = path
+        self.directory = directory
+        self.target = target
+        self.task_set_options = dict(task_set_options or {})
+        self.resources = resources  # not passed on, see above
+        self.name = name
+        self.component_lookup = component_lookup
+        self.available = available
+        self._factory = evaluator_factory
+        self.constants = _constants(self.recipe)
+        self._submitted = {}
+        self._done = set()
+        self._cancelled = False
+        self._running = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+        return False
+
+    def close(self):
+        pass
+
+    def submit(self, configuration, key=None, *, options=None):
+        """Add a structure; returns its key (unique, filesystem-safe)."""
+        if key is None:
+            key = f"s{len(self._submitted) + 1:06d}"
+        key = str(key)
+        if key in self._submitted:
+            raise ValueError(f"Duplicate key '{key}'")
+        self._submitted[key] = (configuration, dict(options or {}))
+        return key
+
+    def cancel(self):
+        """Stop: the component evaluator running now is cancelled, and no other
+        component starts."""
+        self._cancelled = True
+        for evaluator in self._running:
+            cancel = getattr(evaluator, "cancel", None)
+            if cancel is not None:
+                cancel()
+
+    @property
+    def cancelled(self):
+        return self._cancelled
+
+    def expected_fingerprints(self, configuration, **kwargs):
+        """None: a composite is never stored as such, only its components (whose
+        fingerprints the components' programs predict)."""
+        return None
+
+    def _make_component_evaluator(self, node, mc, *, properties, directory, name):
+        if self._cancelled:
+            raise RuntimeError("cancelled")
+        if self._factory is not None:
+            evaluator = self._factory(
+                node, mc, properties=properties, directory=directory, name=name
+            )
+        else:
+            import seamm_exec
+
+            evaluator = seamm_exec.Evaluator(
+                node,
+                mc,
+                properties=properties,
+                path=self._path,
+                directory=directory,
+                target=self.target,
+                task_set_options=self.task_set_options,
+                name=name,
+            )
+        self._running = [evaluator]
+        return evaluator
+
+    def results(self):
+        """Compute what has been submitted; yield an
+        :class:`seamm_exec.evaluator.EvaluatorResult` for each structure, once all
+        its components are done."""
+        from seamm_exec.evaluator import EvaluatorResult
+
+        pending = {k: v for k, v in self._submitted.items() if k not in self._done}
+        if not pending:
+            return
+        try:
+            out = self._evaluate(pending)
+        except RuntimeError:
+            if not self._cancelled:
+                raise
+            out = {}
+        for key in pending:
+            if key not in out:
+                self._done.add(key)
+                yield EvaluatorResult(
+                    key=key, ok=False, reason="cancelled", path="batch"
+                )
+        for key, composite in out.items():
+            self._done.add(key)
+            if not composite.ok:
+                yield EvaluatorResult(
+                    key=key, ok=False, reason=composite.reason, path="batch"
+                )
+                continue
+            data = composite_data(
+                self.recipe,
+                self.model_chemistry,
+                composite.components,
+                composite.results,
+            )
+            yield EvaluatorResult(
+                key=key, ok=True, energy=composite.E0, data=data, path="batch"
+            )
+
+    def _evaluate(self, pending):
+        out = evaluate_recipe(
+            self.node,
+            self.recipe,
+            {key: configuration for key, (configuration, _) in pending.items()},
+            directory=self.directory,
+            lookup=self.component_lookup,
+            constants=self.constants,
+            available=self.available,
+            evaluator_factory=self._make_component_evaluator,
+            name=self.name,
+            options={key: options for key, (_, options) in pending.items()},
+        )
+        self._running = []
+        return out
+
+
+def _constants(recipe):
+    """The recipe's empirical values (E_h) that are plain numbers. Terms that
+    depend on the structure (higher-level corrections, spin-orbit tables) are not
+    implemented yet, and a recipe that needs them is refused."""
+    constants = {}
+    for name, value in (recipe.data.get("empirical") or {}).items():
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            constants[name] = float(value)
+        elif isinstance(value, dict) and isinstance(value.get("value"), (int, float)):
+            constants[name] = float(value["value"])
+        else:
+            raise RecipeError(
+                f"The recipe {recipe.name}: the empirical term '{name}' depends on "
+                "the structure, which is not implemented yet."
+            )
+    return constants
