@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>composite_step.recipes &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
+    <title>composite_step.recipes &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b41936cd"></script>
+    <script src="../../_static/documentation_options.js?v=900c25b8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -551,6 +551,7 @@
     <span class="s2">"combine"</span><span class="p">,</span>
     <span class="s2">"empirical"</span><span class="p">,</span>
     <span class="s2">"atoms"</span><span class="p">,</span>
+    <span class="s2">"allow_mixed_reference"</span><span class="p">,</span>
     <span class="s2">"uncertainty"</span><span class="p">,</span>
     <span class="s2">"validation"</span><span class="p">,</span>
 <span class="p">}</span>
@@ -574,6 +575,7 @@
     <span class="s2">"sp_shells"</span><span class="p">,</span>
     <span class="s2">"convergence"</span><span class="p">,</span>
     <span class="s2">"options"</span><span class="p">,</span>  <span class="c1"># anything else the code must be told, passed through as given</span>
+    <span class="s2">"omit"</span><span class="p">,</span>  <span class="c1"># parts deliberately left out, e.g. ["CABS singles"]</span>
 <span class="p">}</span>
 
 
@@ -596,20 +598,76 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    total : float</span>
-<span class="sd">        The total energy, E_h.</span>
+<span class="sd">        The total energy.</span>
 <span class="sd">    hf : float, optional</span>
-<span class="sd">        The HF (reference) part of a correlated energy, E_h.</span>
+<span class="sd">        The HF (reference) part of a correlated energy, in the same unit. Taken</span>
+<span class="sd">        from ``parts["HF"]`` when not given.</span>
+<span class="sd">    parts : {str: float}, optional</span>
+<span class="sd">        The named parts of the energy (the program's ``energy parts``), in the same</span>
+<span class="sd">        unit as ``total``.</span>
+<span class="sd">    factors : {str: float}, optional</span>
+<span class="sd">        Dimensionless factors, e.g. ``"(T) scale f"``.</span>
+<span class="sd">    reference : str, optional</span>
+<span class="sd">        The reference the correlation is built on: "RHF", "UHF" or "QRO".</span>
 <span class="sd">    """</span>
 
     <span class="n">total</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">hf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">parts</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">factors</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">reference</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"HF"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="s2">"HF"</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">correlation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The correlation energy alone: E - HF - CABS singles (an F12 run's CABS</span>
+<span class="sd">        singles belong to neither the HF part nor the correlation)."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">total</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">total</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CABS singles"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
+<div class="viewcode-block" id="ComponentEnergy.part">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.recipes.ComponentEnergy.part">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""A named part: stored, or one of :data:`DERIVED_PARTS`."""</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"HF"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">DERIVED_PARTS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DERIVED_PARTS</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"no part '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' (the parts are "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">))</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_scaled_triples</span><span class="p">(</span><span class="n">triples</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scaled</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">"(T) scale f"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">factors</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="s2">"no (T) scale factor f"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">c</span><span class="o">.</span><span class="n">factors</span><span class="p">[</span><span class="s2">"(T) scale f"</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">triples</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scaled</span>
+
+
+<span class="c1">#: Parts computed at use from the stored ones, never stored themselves.</span>
+<span class="n">DERIVED_PARTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"CCSD-F12 correlation"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="s2">"CCSD correlation"</span><span class="p">)</span>
+    <span class="o">+</span> <span class="n">c</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="s2">"F12 correction"</span><span class="p">),</span>
+    <span class="s2">"DLPNO-CCSD-F12 correlation"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="s2">"DLPNO-CCSD correlation"</span><span class="p">)</span>
+    <span class="o">+</span> <span class="n">c</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="s2">"F12 correction"</span><span class="p">),</span>
+    <span class="s2">"HF+CABS"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="s2">"HF"</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="s2">"CABS singles"</span><span class="p">),</span>
+    <span class="s2">"(T*)"</span><span class="p">:</span> <span class="n">_scaled_triples</span><span class="p">(</span><span class="s2">"(T)"</span><span class="p">),</span>
+    <span class="s2">"DLPNO-(T0*)"</span><span class="p">:</span> <span class="n">_scaled_triples</span><span class="p">(</span><span class="s2">"DLPNO-(T0)"</span><span class="p">),</span>
+<span class="p">}</span>
+<span class="c1">#: The parts that are the reference's energy, whose references must agree</span>
+<span class="n">HF_TYPE_PARTS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"HF"</span><span class="p">,</span> <span class="s2">"HF+CABS"</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="cbs_power">
@@ -678,9 +736,10 @@
     <span class="s2">"scale"</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span>
     <span class="s2">"hf_part"</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span><span class="p">,),</span> <span class="mi">1</span><span class="p">),</span>
     <span class="s2">"corr_part"</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span><span class="p">,),</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="s2">"part"</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span>
 <span class="p">}</span>
 <span class="c1">#: Functions of a component itself, not of its energy.</span>
-<span class="n">PART_FUNCTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"hf_part"</span><span class="p">,</span> <span class="s2">"corr_part"</span><span class="p">}</span>
+<span class="n">PART_FUNCTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"hf_part"</span><span class="p">,</span> <span class="s2">"corr_part"</span><span class="p">,</span> <span class="s2">"part"</span><span class="p">}</span>
 
 <span class="n">_BINARY</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">ast</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">,</span>
@@ -743,6 +802,19 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'combine' line </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">: only plain function calls"</span><span class="p">)</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"part"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span>
+                <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">keywords</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"'combine' line </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">: part() takes a component and the name "</span>
+                    <span class="s1">'of a part, e.g. part(ccsdt, "(T)")'</span>
+                <span class="p">)</span>
+            <span class="k">return</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">PART_FUNCTIONS</span><span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span>
@@ -794,9 +866,29 @@
     <span class="k">return</span> <span class="n">plain</span><span class="p">,</span> <span class="n">parts</span>
 
 
+<div class="viewcode-block" id="parts_used">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.recipes.parts_used">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parts_used</span><span class="p">(</span><span class="n">statements</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""{component: set of what is used of it}: "hf_part", "corr_part" and the</span>
+<span class="sd">    names given to part()."""</span>
+    <span class="n">used</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">statements</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">sub</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">PART_FUNCTIONS</span>
+            <span class="p">):</span>
+                <span class="n">which</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span>
+                <span class="n">what</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">sub</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="s2">"part"</span> <span class="k">else</span> <span class="n">sub</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="n">used</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">which</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">what</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">used</span></div>
+
+
+
 <div class="viewcode-block" id="evaluate">
 <a class="viewcode-back" href="../../api/composite_step.html#composite_step.recipes.evaluate">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">statements</span><span class="p">,</span> <span class="n">components</span><span class="p">,</span> <span class="n">constants</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">statements</span><span class="p">,</span> <span class="n">components</span><span class="p">,</span> <span class="n">constants</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_mixed_reference</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Evaluate parsed ``combine`` statements.</span>
 
 <span class="sd">    Parameters</span>
@@ -807,6 +899,9 @@
 <span class="sd">        The energies of the components (and of the geometry level), E_h.</span>
 <span class="sd">    constants : {str: float}, optional</span>
 <span class="sd">        Other named values: empirical terms, spin-orbit, E_h.</span>
+<span class="sd">    allow_mixed_reference : bool</span>
+<span class="sd">        Allow HF-type parts of components with different references (RHF, UHF,</span>
+<span class="sd">        QRO) in one combination; refused otherwise.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -820,6 +915,7 @@
     <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">total</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">comps</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
     <span class="n">values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">constants</span> <span class="ow">or</span> <span class="p">{})</span>
     <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">references</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">ev</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">):</span>
@@ -838,14 +934,24 @@
                 <span class="n">which</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span>
                 <span class="k">if</span> <span class="n">which</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">comps</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'combine': </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">() of unknown '</span><span class="si">{</span><span class="n">which</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
-                <span class="n">part</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">comps</span><span class="p">[</span><span class="n">which</span><span class="p">]</span><span class="o">.</span><span class="n">hf</span> <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"hf_part"</span> <span class="k">else</span> <span class="n">comps</span><span class="p">[</span><span class="n">which</span><span class="p">]</span><span class="o">.</span><span class="n">correlation</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">part</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">component</span> <span class="o">=</span> <span class="n">comps</span><span class="p">[</span><span class="n">which</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"part"</span><span class="p">:</span>
+                    <span class="n">wanted</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">component</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">RecipeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'combine': the component '</span><span class="si">{</span><span class="n">which</span><span class="si">}</span><span class="s2">': </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">wanted</span> <span class="ow">in</span> <span class="n">HF_TYPE_PARTS</span><span class="p">:</span>
+                        <span class="n">references</span><span class="p">[</span><span class="n">which</span><span class="p">]</span> <span class="o">=</span> <span class="n">component</span><span class="o">.</span><span class="n">reference</span>
+                    <span class="k">return</span> <span class="n">value</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">component</span><span class="o">.</span><span class="n">hf</span> <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"hf_part"</span> <span class="k">else</span> <span class="n">component</span><span class="o">.</span><span class="n">correlation</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">"'combine': the component '</span><span class="si">{</span><span class="n">which</span><span class="si">}</span><span class="s2">' has no HF part"</span>
                     <span class="p">)</span>
-                <span class="k">return</span> <span class="n">part</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"hf_part"</span><span class="p">:</span>
+                    <span class="n">references</span><span class="p">[</span><span class="n">which</span><span class="p">]</span> <span class="o">=</span> <span class="n">component</span><span class="o">.</span><span class="n">reference</span>
+                <span class="k">return</span> <span class="n">value</span>
             <span class="n">function</span> <span class="o">=</span> <span class="n">FUNCTIONS</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">ev</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
             <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">kw</span><span class="o">.</span><span class="n">arg</span><span class="p">:</span> <span class="n">ev</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">keywords</span><span class="p">}</span>
@@ -858,6 +964,13 @@
         <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
     <span class="k">if</span> <span class="s2">"E0"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="s2">"'combine' must define E0"</span><span class="p">)</span>
+    <span class="n">kinds</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">references</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kinds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">allow_mixed_reference</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+            <span class="s2">"'combine' uses the HF parts of components with different references ("</span>
+            <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">references</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">references</span><span class="p">))</span>
+            <span class="o">+</span> <span class="s2">"); say 'allow_mixed_reference: true' in the recipe if that is meant"</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="n">results</span></div>
 
 
@@ -932,8 +1045,19 @@
 <span class="sd">        ``components`` must include the geometry level's energy as ``geometry``</span>
 <span class="sd">        when the combination uses it.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">statements</span><span class="p">,</span> <span class="n">components</span><span class="p">,</span> <span class="n">constants</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statements</span><span class="p">,</span>
+            <span class="n">components</span><span class="p">,</span>
+            <span class="n">constants</span><span class="p">,</span>
+            <span class="n">allow_mixed_reference</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"allow_mixed_reference"</span><span class="p">)),</span>
+        <span class="p">)</span></div>
 
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">needs_parts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The components whose parts ``combine`` uses (hf_part, corr_part,</span>
+<span class="sd">        part)."""</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">parts_used</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">statements</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Recipe.thermal">
 <a class="viewcode-back" href="../../api/composite_step.html#composite_step.recipes.Recipe.thermal">[docs]</a>
@@ -1068,6 +1192,24 @@
                 <span class="sa">f</span><span class="s2">"'combine': '</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">' is not an energy (it scales as energy^"</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">degrees</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="si">}</span><span class="s2">); every result must scale like an energy, so "</span>
                 <span class="s2">"that it is the same in any unit"</span>
+            <span class="p">)</span>
+
+    <span class="c1"># An F12 component split into hf_part + corr_part must account for its CABS</span>
+    <span class="c1"># singles, which belong to neither</span>
+    <span class="k">for</span> <span class="n">which</span><span class="p">,</span> <span class="n">used</span> <span class="ow">in</span> <span class="n">parts_used</span><span class="p">(</span><span class="n">statements</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">comp</span> <span class="o">=</span> <span class="n">components</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">which</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">{</span><span class="s2">"hf_part"</span><span class="p">,</span> <span class="s2">"corr_part"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="n">used</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"F12"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
+            <span class="k">continue</span>
+        <span class="n">omitted</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"omit"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="s2">"CABS singles"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used</span> <span class="ow">and</span> <span class="s2">"CABS singles"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">omitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The component '</span><span class="si">{</span><span class="n">which</span><span class="si">}</span><span class="s2">' is an F12 calculation split with hf_part "</span>
+                <span class="s2">"and corr_part, which leave out its CABS singles: add "</span>
+                <span class="sa">f</span><span class="s1">'part(</span><span class="si">{</span><span class="n">which</span><span class="si">}</span><span class="s1">, "CABS singles"), or say omit: ["CABS singles"] '</span>
+                <span class="s2">"for the component"</span>
             <span class="p">)</span>
 
     <span class="n">requires</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"requires"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>

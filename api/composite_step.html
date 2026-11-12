@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>composite_step package &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
+    <title>composite_step package &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b41936cd"></script>
+    <script src="../_static/documentation_options.js?v=900c25b8"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1060,6 +1060,13 @@ computed) and <code class="docutils literal notranslate"><span class="pre">model
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="composite_step.evaluate.component_energy">
+<span class="sig-prename descclassname"><span class="pre">composite_step.evaluate.</span></span><span class="sig-name descname"><span class="pre">component_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_parts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/composite_step/evaluate.html#component_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#composite_step.evaluate.component_energy" title="Link to this definition">#</a></dt>
+<dd><p>The energy of a component for the combination (kJ/mol), with its parts
+converted to kJ/mol when the recipe uses them.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="composite_step.evaluate.component_levels">
 <span class="sig-prename descclassname"><span class="pre">composite_step.evaluate.</span></span><span class="sig-name descname"><span class="pre">component_levels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">recipe</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/composite_step/evaluate.html#component_levels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#composite_step.evaluate.component_levels" title="Link to this definition">#</a></dt>
 <dd><p>{source: level spec} for every energy the recipe combines, the geometry
@@ -1243,31 +1250,64 @@ recipe is read), so the components may be combined in any one unit, E_h or kJ/mo
 with the constants in the same unit. The thermal terms likewise.</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="composite_step.recipes.COMPONENT_FIELDS">
-<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">COMPONENT_FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'basis',</span> <span class="pre">'code',</span> <span class="pre">'convergence',</span> <span class="pre">'density_fitting',</span> <span class="pre">'f12',</span> <span class="pre">'frozen_core',</span> <span class="pre">'level',</span> <span class="pre">'method',</span> <span class="pre">'options',</span> <span class="pre">'reference',</span> <span class="pre">'relativistic',</span> <span class="pre">'sp_shells'}</span></span><a class="headerlink" href="#composite_step.recipes.COMPONENT_FIELDS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">COMPONENT_FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'basis',</span> <span class="pre">'code',</span> <span class="pre">'convergence',</span> <span class="pre">'density_fitting',</span> <span class="pre">'f12',</span> <span class="pre">'frozen_core',</span> <span class="pre">'level',</span> <span class="pre">'method',</span> <span class="pre">'omit',</span> <span class="pre">'options',</span> <span class="pre">'reference',</span> <span class="pre">'relativistic',</span> <span class="pre">'sp_shells'}</span></span><a class="headerlink" href="#composite_step.recipes.COMPONENT_FIELDS" title="Link to this definition">#</a></dt>
 <dd><p>The fields of a component (one ordinary single point at the recipe’s geometry).</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="composite_step.recipes.ComponentEnergy">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">ComponentEnergy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/composite_step/recipes.html#ComponentEnergy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#composite_step.recipes.ComponentEnergy" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">ComponentEnergy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/composite_step/recipes.html#ComponentEnergy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#composite_step.recipes.ComponentEnergy" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>The energy of one component, with the parts a combination may need.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>total</strong> (<em>float</em>) – The total energy, E_h.</p></li>
-<li><p><strong>hf</strong> (<em>float</em><em>, </em><em>optional</em>) – The HF (reference) part of a correlated energy, E_h.</p></li>
+<li><p><strong>total</strong> (<em>float</em>) – The total energy.</p></li>
+<li><p><strong>hf</strong> (<em>float</em><em>, </em><em>optional</em>) – The HF (reference) part of a correlated energy, in the same unit. Taken
+from <code class="docutils literal notranslate"><span class="pre">parts[&quot;HF&quot;]</span></code> when not given.</p></li>
+<li><p><strong>parts</strong> (<em>{str: float}</em><em>, </em><em>optional</em>) – The named parts of the energy (the program’s <code class="docutils literal notranslate"><span class="pre">energy</span> <span class="pre">parts</span></code>), in the same
+unit as <code class="docutils literal notranslate"><span class="pre">total</span></code>.</p></li>
+<li><p><strong>factors</strong> (<em>{str: float}</em><em>, </em><em>optional</em>) – Dimensionless factors, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;(T)</span> <span class="pre">scale</span> <span class="pre">f&quot;</span></code>.</p></li>
+<li><p><strong>reference</strong> (<em>str</em><em>, </em><em>optional</em>) – The reference the correlation is built on: “RHF”, “UHF” or “QRO”.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="composite_step.recipes.ComponentEnergy.correlation">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">correlation</span></span><a class="headerlink" href="#composite_step.recipes.ComponentEnergy.correlation" title="Link to this definition">#</a></dt>
+<dd><p>E - HF - CABS singles (an F12 run’s CABS
+singles belong to neither the HF part nor the correlation).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The correlation energy alone</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="composite_step.recipes.ComponentEnergy.factors">
+<span class="sig-name descname"><span class="pre">factors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></span><a class="headerlink" href="#composite_step.recipes.ComponentEnergy.factors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="composite_step.recipes.ComponentEnergy.hf">
 <span class="sig-name descname"><span class="pre">hf</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#composite_step.recipes.ComponentEnergy.hf" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="composite_step.recipes.ComponentEnergy.part">
+<span class="sig-name descname"><span class="pre">part</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/composite_step/recipes.html#ComponentEnergy.part"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#composite_step.recipes.ComponentEnergy.part" title="Link to this definition">#</a></dt>
+<dd><p>A named part: stored, or one of <a class="reference internal" href="#composite_step.recipes.DERIVED_PARTS" title="composite_step.recipes.DERIVED_PARTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DERIVED_PARTS</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="composite_step.recipes.ComponentEnergy.parts">
+<span class="sig-name descname"><span class="pre">parts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></span><a class="headerlink" href="#composite_step.recipes.ComponentEnergy.parts" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="composite_step.recipes.ComponentEnergy.reference">
+<span class="sig-name descname"><span class="pre">reference</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#composite_step.recipes.ComponentEnergy.reference" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -1279,7 +1319,7 @@ with the constants in the same unit. The thermal terms likewise.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="composite_step.recipes.DEGREES">
-<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">DEGREES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'cbs_power':</span> <span class="pre">((1,</span> <span class="pre">1,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0),</span> <span class="pre">1),</span> <span class="pre">'corr_part':</span> <span class="pre">((1,),</span> <span class="pre">1),</span> <span class="pre">'hf_extrapolate_exp':</span> <span class="pre">((1,</span> <span class="pre">1,</span> <span class="pre">0,</span> <span class="pre">0),</span> <span class="pre">1),</span> <span class="pre">'hf_part':</span> <span class="pre">((1,),</span> <span class="pre">1),</span> <span class="pre">'scale':</span> <span class="pre">((1,</span> <span class="pre">0),</span> <span class="pre">1),</span> <span class="pre">'schwenke':</span> <span class="pre">((1,</span> <span class="pre">1,</span> <span class="pre">0),</span> <span class="pre">1)}</span></span><a class="headerlink" href="#composite_step.recipes.DEGREES" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">DEGREES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'cbs_power':</span> <span class="pre">((1,</span> <span class="pre">1,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0),</span> <span class="pre">1),</span> <span class="pre">'corr_part':</span> <span class="pre">((1,),</span> <span class="pre">1),</span> <span class="pre">'hf_extrapolate_exp':</span> <span class="pre">((1,</span> <span class="pre">1,</span> <span class="pre">0,</span> <span class="pre">0),</span> <span class="pre">1),</span> <span class="pre">'hf_part':</span> <span class="pre">((1,),</span> <span class="pre">1),</span> <span class="pre">'part':</span> <span class="pre">((1,</span> <span class="pre">0),</span> <span class="pre">1),</span> <span class="pre">'scale':</span> <span class="pre">((1,</span> <span class="pre">0),</span> <span class="pre">1),</span> <span class="pre">'schwenke':</span> <span class="pre">((1,</span> <span class="pre">1,</span> <span class="pre">0),</span> <span class="pre">1)}</span></span><a class="headerlink" href="#composite_step.recipes.DEGREES" title="Link to this definition">#</a></dt>
 <dd><p>1 for an
 energy, 0 for a pure number (a cardinal number, an exponent, a factor). Every
 function is homogeneous of degree 1 in its energy arguments, so a combination
@@ -1294,6 +1334,12 @@ exponent, for example, enters only through a ratio of energy differences
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="composite_step.recipes.DERIVED_PARTS">
+<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">DERIVED_PARTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'(T*)':</span> <span class="pre">&lt;function</span> <span class="pre">_scaled_triples.&lt;locals&gt;.scaled&gt;,</span> <span class="pre">'CCSD-F12</span> <span class="pre">correlation':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'DLPNO-(T0*)':</span> <span class="pre">&lt;function</span> <span class="pre">_scaled_triples.&lt;locals&gt;.scaled&gt;,</span> <span class="pre">'DLPNO-CCSD-F12</span> <span class="pre">correlation':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'HF+CABS':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></span><a class="headerlink" href="#composite_step.recipes.DERIVED_PARTS" title="Link to this definition">#</a></dt>
+<dd><p>Parts computed at use from the stored ones, never stored themselves.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="composite_step.recipes.DESCRIPTIVE">
 <span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">DESCRIPTIVE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'description',</span> <span class="pre">'doi',</span> <span class="pre">'reference',</span> <span class="pre">'uncertainty',</span> <span class="pre">'validation'}</span></span><a class="headerlink" href="#composite_step.recipes.DESCRIPTIVE" title="Link to this definition">#</a></dt>
 <dd><p>Fields that describe a recipe without changing its energy; they are left out
@@ -1302,7 +1348,7 @@ of the fingerprint.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="composite_step.recipes.FIELDS">
-<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'atoms',</span> <span class="pre">'combine',</span> <span class="pre">'components',</span> <span class="pre">'description',</span> <span class="pre">'doi',</span> <span class="pre">'empirical',</span> <span class="pre">'frequencies',</span> <span class="pre">'frozen_core',</span> <span class="pre">'frozen_core_definitions',</span> <span class="pre">'geometry',</span> <span class="pre">'recipe',</span> <span class="pre">'reference',</span> <span class="pre">'requires',</span> <span class="pre">'uncertainty',</span> <span class="pre">'validation',</span> <span class="pre">'version'}</span></span><a class="headerlink" href="#composite_step.recipes.FIELDS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'allow_mixed_reference',</span> <span class="pre">'atoms',</span> <span class="pre">'combine',</span> <span class="pre">'components',</span> <span class="pre">'description',</span> <span class="pre">'doi',</span> <span class="pre">'empirical',</span> <span class="pre">'frequencies',</span> <span class="pre">'frozen_core',</span> <span class="pre">'frozen_core_definitions',</span> <span class="pre">'geometry',</span> <span class="pre">'recipe',</span> <span class="pre">'reference',</span> <span class="pre">'requires',</span> <span class="pre">'uncertainty',</span> <span class="pre">'validation',</span> <span class="pre">'version'}</span></span><a class="headerlink" href="#composite_step.recipes.FIELDS" title="Link to this definition">#</a></dt>
 <dd><p>The top-level fields of a recipe file.</p>
 </dd></dl>
 
@@ -1332,6 +1378,12 @@ they take (min, max).</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="composite_step.recipes.HF_TYPE_PARTS">
+<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">HF_TYPE_PARTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'HF',</span> <span class="pre">'HF+CABS'}</span></span><a class="headerlink" href="#composite_step.recipes.HF_TYPE_PARTS" title="Link to this definition">#</a></dt>
+<dd><p>The parts that are the reference’s energy, whose references must agree</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="composite_step.recipes.OWNER">
 <span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">OWNER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SEAMM'</span></span><a class="headerlink" href="#composite_step.recipes.OWNER" title="Link to this definition">#</a></dt>
 <dd><p>The owner and type of SEAMM’s recipes as model chemistries.</p>
@@ -1339,7 +1391,7 @@ they take (min, max).</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="composite_step.recipes.PART_FUNCTIONS">
-<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">PART_FUNCTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'corr_part',</span> <span class="pre">'hf_part'}</span></span><a class="headerlink" href="#composite_step.recipes.PART_FUNCTIONS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">PART_FUNCTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'corr_part',</span> <span class="pre">'hf_part',</span> <span class="pre">'part'}</span></span><a class="headerlink" href="#composite_step.recipes.PART_FUNCTIONS" title="Link to this definition">#</a></dt>
 <dd><p>Functions of a component itself, not of its energy.</p>
 </dd></dl>
 
@@ -1399,6 +1451,13 @@ and of the components’ own fingerprints when given.</p>
 <dt class="sig sig-object py" id="composite_step.recipes.Recipe.name">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#composite_step.recipes.Recipe.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="composite_step.recipes.Recipe.needs_parts">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">needs_parts</span></span><a class="headerlink" href="#composite_step.recipes.Recipe.needs_parts" title="Link to this definition">#</a></dt>
+<dd><p>The components whose parts <code class="docutils literal notranslate"><span class="pre">combine</span></code> uses (hf_part, corr_part,
+part).</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="composite_step.recipes.Recipe.path">
@@ -1519,7 +1578,7 @@ strings (<code class="docutils literal notranslate"><span class="pre">CCSD(T)</s
 
 <dl class="py function">
 <dt class="sig sig-object py" id="composite_step.recipes.evaluate">
-<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">statements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/composite_step/recipes.html#evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#composite_step.recipes.evaluate" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">statements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_mixed_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/composite_step/recipes.html#evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#composite_step.recipes.evaluate" title="Link to this definition">#</a></dt>
 <dd><p>Evaluate parsed <code class="docutils literal notranslate"><span class="pre">combine</span></code> statements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1527,6 +1586,8 @@ strings (<code class="docutils literal notranslate"><span class="pre">CCSD(T)</s
 <li><p><strong>statements</strong> (<em>[</em><em>(</em><em>str</em><em>, </em><em>ast.AST</em><em>)</em><em>]</em>) – From <a class="reference internal" href="#composite_step.recipes.parse_combine" title="composite_step.recipes.parse_combine"><code class="xref py py-func docutils literal notranslate"><span class="pre">parse_combine()</span></code></a>.</p></li>
 <li><p><strong>components</strong> (<em>{str: ComponentEnergy</em><em> or </em><em>float}</em>) – The energies of the components (and of the geometry level), E_h.</p></li>
 <li><p><strong>constants</strong> (<em>{str: float}</em><em>, </em><em>optional</em>) – Other named values: empirical terms, spin-orbit, E_h.</p></li>
+<li><p><strong>allow_mixed_reference</strong> (<em>bool</em>) – Allow HF-type parts of components with different references (RHF, UHF,
+QRO) in one combination; refused otherwise.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1560,6 +1621,13 @@ E(n) = E_CBS + B (n + 1) exp(-alpha sqrt(n)), from cardinal numbers n and n + 1.
 of components and of earlier results, + - * / and parentheses, and the
 functions in <a class="reference internal" href="#composite_step.recipes.FUNCTIONS" title="composite_step.recipes.FUNCTIONS"><code class="xref py py-data docutils literal notranslate"><span class="pre">FUNCTIONS</span></code></a> and <a class="reference internal" href="#composite_step.recipes.PART_FUNCTIONS" title="composite_step.recipes.PART_FUNCTIONS"><code class="xref py py-data docutils literal notranslate"><span class="pre">PART_FUNCTIONS</span></code></a>. Nothing else is
 accepted: the text is parsed with <code class="xref py py-mod docutils literal notranslate"><span class="pre">ast</span></code> and never given to <code class="docutils literal notranslate"><span class="pre">eval</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="composite_step.recipes.parts_used">
+<span class="sig-prename descclassname"><span class="pre">composite_step.recipes.</span></span><span class="sig-name descname"><span class="pre">parts_used</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">statements</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/composite_step/recipes.html#parts_used"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#composite_step.recipes.parts_used" title="Link to this definition">#</a></dt>
+<dd><p>{component: set of what is used of it}: “hf_part”, “corr_part” and the
+names given to part().</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1980,6 +2048,7 @@ A SEAMM plug-in for composite methods: energies from recipes of ordinary calcula
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.evaluate.HARTREE_TO_KJ"><code class="docutils literal notranslate"><span class="pre">HARTREE_TO_KJ</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.evaluate.component_energy"><code class="docutils literal notranslate"><span class="pre">component_energy()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.evaluate.component_levels"><code class="docutils literal notranslate"><span class="pre">component_levels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.evaluate.composite_data"><code class="docutils literal notranslate"><span class="pre">composite_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.evaluate.composite_record"><code class="docutils literal notranslate"><span class="pre">composite_record()</span></code></a></li>
@@ -2002,16 +2071,22 @@ A SEAMM plug-in for composite methods: energies from recipes of ordinary calcula
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.COMPONENT_FIELDS"><code class="docutils literal notranslate"><span class="pre">COMPONENT_FIELDS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.ComponentEnergy"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.ComponentEnergy.correlation"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.correlation</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.ComponentEnergy.factors"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.factors</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.ComponentEnergy.hf"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.hf</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.ComponentEnergy.part"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.part()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.ComponentEnergy.parts"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.parts</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.ComponentEnergy.reference"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.reference</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.ComponentEnergy.total"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.total</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.DEGREES"><code class="docutils literal notranslate"><span class="pre">DEGREES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.DERIVED_PARTS"><code class="docutils literal notranslate"><span class="pre">DERIVED_PARTS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.DESCRIPTIVE"><code class="docutils literal notranslate"><span class="pre">DESCRIPTIVE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.FIELDS"><code class="docutils literal notranslate"><span class="pre">FIELDS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.FORBIDDEN_IN_NAME"><code class="docutils literal notranslate"><span class="pre">FORBIDDEN_IN_NAME</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.FUNCTIONS"><code class="docutils literal notranslate"><span class="pre">FUNCTIONS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.GEOMETRY"><code class="docutils literal notranslate"><span class="pre">GEOMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.HF_TYPE_PARTS"><code class="docutils literal notranslate"><span class="pre">HF_TYPE_PARTS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.OWNER"><code class="docutils literal notranslate"><span class="pre">OWNER</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.PART_FUNCTIONS"><code class="docutils literal notranslate"><span class="pre">PART_FUNCTIONS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.Recipe"><code class="docutils literal notranslate"><span class="pre">Recipe</span></code></a><ul class="nav section-nav flex-column">
@@ -2024,6 +2099,7 @@ A SEAMM plug-in for composite methods: energies from recipes of ordinary calcula
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.Recipe.geometry"><code class="docutils literal notranslate"><span class="pre">Recipe.geometry</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.Recipe.model_chemistry"><code class="docutils literal notranslate"><span class="pre">Recipe.model_chemistry</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.Recipe.name"><code class="docutils literal notranslate"><span class="pre">Recipe.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.Recipe.needs_parts"><code class="docutils literal notranslate"><span class="pre">Recipe.needs_parts</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.Recipe.path"><code class="docutils literal notranslate"><span class="pre">Recipe.path</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.Recipe.requires"><code class="docutils literal notranslate"><span class="pre">Recipe.requires</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.Recipe.source"><code class="docutils literal notranslate"><span class="pre">Recipe.source</span></code></a></li>
@@ -2046,6 +2122,7 @@ A SEAMM plug-in for composite methods: energies from recipes of ordinary calcula
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.hf_extrapolate_exp"><code class="docutils literal notranslate"><span class="pre">hf_extrapolate_exp()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.load_recipe"><code class="docutils literal notranslate"><span class="pre">load_recipe()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.parse_combine"><code class="docutils literal notranslate"><span class="pre">parse_combine()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.parts_used"><code class="docutils literal notranslate"><span class="pre">parts_used()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.scale"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.schwenke"><code class="docutils literal notranslate"><span class="pre">schwenke()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composite_step.recipes.shipped_directory"><code class="docutils literal notranslate"><span class="pre">shipped_directory()</span></code></a></li>

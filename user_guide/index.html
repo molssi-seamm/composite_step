@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
+    <title>User Guide &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b41936cd"></script>
+    <script src="../_static/documentation_options.js?v=900c25b8"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -596,7 +596,8 @@ and <code class="docutils literal notranslate"><span class="pre">n</span> <span 
 <li><p><code class="docutils literal notranslate"><span class="pre">schwenke(e_x,</span> <span class="pre">e_y,</span> <span class="pre">factor)</span></code> – Schwenke’s two-point extrapolation;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">scale(e,</span> <span class="pre">factor)</span></code>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hf_part(c)</span></code> and <code class="docutils literal notranslate"><span class="pre">corr_part(c)</span></code> – the HF and correlation parts of a
-correlated component.</p></li>
+correlated component, and <code class="docutils literal notranslate"><span class="pre">part(c,</span> <span class="pre">&quot;name&quot;)</span></code> – any named part (see
+<a class="reference internal" href="#parts-of-an-energy">Parts of an energy</a>).</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">E0</span></code> must be assigned: it is the composite energy. Every value must scale
 like an energy, so a combination gives the same result in any unit; this is
@@ -608,6 +609,72 @@ describe a recipe without changing its energy. A recipe’s fingerprint covers e
 other field, so a result records exactly which recipe made it.</p>
 <p>The thermal terms follow from the geometry level: H(0 K) = E0 + s ZPE, and
 H(T) = E0 + s ZPE + [H(T) - E - ZPE], with s the ZPE scale factor.</p>
+</section>
+<section id="parts-of-an-energy">
+<h2>Parts of an energy<a class="headerlink" href="#parts-of-an-energy" title="Link to this heading">#</a></h2>
+<p>A correlated calculation reports the parts of its energy with it, so a recipe can
+treat them separately: extrapolate the correlation energy but not the HF energy,
+or scale the triples. ORCA reports them for MP2, RI-MP2, CCSD(T), DLPNO-CCSD(T)
+and their F12 forms:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Run</p></th>
+<th class="head"><p>Parts</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>MP2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HF</span></code>, <code class="docutils literal notranslate"><span class="pre">MP2</span> <span class="pre">correlation</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>RI-MP2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HF</span></code>, <code class="docutils literal notranslate"><span class="pre">RI-MP2</span> <span class="pre">correlation</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>CCSD(T)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HF</span></code>, <code class="docutils literal notranslate"><span class="pre">CCSD</span> <span class="pre">correlation</span></code>, <code class="docutils literal notranslate"><span class="pre">(T)</span></code>; <code class="docutils literal notranslate"><span class="pre">MP2</span> <span class="pre">correlation</span></code>
+(closed-shell RHF only)</p></td>
+</tr>
+<tr class="row-odd"><td><p>CCSD(T)-F12D/RI</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HF</span></code>, <code class="docutils literal notranslate"><span class="pre">CABS</span> <span class="pre">singles</span></code>, <code class="docutils literal notranslate"><span class="pre">CCSD</span> <span class="pre">correlation</span></code>,
+<code class="docutils literal notranslate"><span class="pre">F12</span> <span class="pre">correction</span></code>, <code class="docutils literal notranslate"><span class="pre">(T)</span></code>; <code class="docutils literal notranslate"><span class="pre">MP2</span> <span class="pre">correlation</span></code> (RHF only)</p></td>
+</tr>
+<tr class="row-even"><td><p>DLPNO-CCSD(T)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HF</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-MP2</span> <span class="pre">correlation</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD</span>
+<span class="pre">correlation</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-(T0)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>DLPNO-CCSD(T)-F12D</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HF</span></code>, <code class="docutils literal notranslate"><span class="pre">CABS</span> <span class="pre">singles</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD</span> <span class="pre">correlation</span></code>,
+<code class="docutils literal notranslate"><span class="pre">F12</span> <span class="pre">correction</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-(T0)</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-MP2</span>
+<span class="pre">correlation</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Some parts are computed from others when asked for: <code class="docutils literal notranslate"><span class="pre">CCSD-F12</span> <span class="pre">correlation</span></code>
+(CCSD correlation + F12 correction), <code class="docutils literal notranslate"><span class="pre">HF+CABS</span></code>, <code class="docutils literal notranslate"><span class="pre">(T*)</span></code> (the triples scaled by f,
+the ratio of the CCSD correlation with and without F12) and their DLPNO forms.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">HF</span></code> is the energy of the reference determinant the correlation was built on:
+the SCF energy, or for quasi-restricted orbitals (QRO) the QRO determinant’s
+energy, not the UHF one. For F12 it does not include the CABS singles.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(T)</span></code> is never scaled. f is ORCA’s own value for canonical F12; for DLPNO-F12,
+where ORCA prints none, it is computed with the same definition.</p></li>
+<li><p>The DLPNO correlation is everything ORCA’s total includes. ORCA’s printed
+“uncorrected” DLPNO-F12 correlation leaves some of it out, so the CCSD
+correlation is the total correlation less the F12 correction and the triples.</p></li>
+<li><p>The parts of a calculation always sum to its energy, within 2e-9 E_h. If they
+do not, no parts are reported.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">hf_part(c)</span></code> is <code class="docutils literal notranslate"><span class="pre">HF</span></code>, and <code class="docutils literal notranslate"><span class="pre">corr_part(c)</span></code> is the correlation alone: the energy
+less HF and the CABS singles, which belong to neither. A recipe that splits an F12
+component with <code class="docutils literal notranslate"><span class="pre">hf_part</span></code> and <code class="docutils literal notranslate"><span class="pre">corr_part</span></code> must use its <code class="docutils literal notranslate"><span class="pre">part(c,</span> <span class="pre">&quot;CABS</span>
+<span class="pre">singles&quot;)</span></code>, or say <code class="docutils literal notranslate"><span class="pre">omit:</span> <span class="pre">[&quot;CABS</span> <span class="pre">singles&quot;]</span></code> for that component; otherwise it is
+refused when it is read. HF parts of components with different references (RHF,
+UHF, QRO) cannot be combined unless the recipe says <code class="docutils literal notranslate"><span class="pre">allow_mixed_reference:</span>
+<span class="pre">true</span></code>.</p>
+<p>The parts belong to their calculation. They are stored with it in the fragment
+store, and a recipe reuses them only from the same calculation (the same settings
+fingerprint). A stored energy without parts, needed by a recipe that uses parts, is
+computed again; parts are never derived.</p>
 </section>
 <section id="where-recipes-come-from">
 <h2>Where recipes come from<a class="headerlink" href="#where-recipes-come-from" title="Link to this heading">#</a></h2>
@@ -622,14 +689,17 @@ Thermochemistry step’s CBH approach, and the others. A recipe that combines se
 calculations runs each component as one batch of its own program over all the
 structures, the cheapest components first. A structure that fails one component is
 not sent to the later ones, and its result names the component that failed. Each
+component’s memory and cores are its own program’s; note that a program can use
+more memory than it is told: ORCA’s canonical CCSD(T) with a quadruple-zeta basis
+used about 2.7 times its <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code>, so size such components by the memory they
+actually use. Each
 result carries the composite record: the recipe’s fingerprint together with every
 component’s settings fingerprint.</p>
 <p>Not there yet:</p>
 <ul class="simple">
 <li><p>Each component needs a complete <code class="docutils literal notranslate"><span class="pre">level</span></code>; choosing the code from a method and a
 basis set is not implemented yet.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hf_part</span></code> and <code class="docutils literal notranslate"><span class="pre">corr_part</span></code> need the HF part of a component, which the codes do
-not return yet.</p></li>
+<li><p>Only ORCA reports the parts of its energies so far.</p></li>
 <li><p>Empirical terms that depend on the structure (higher-level corrections,
 spin-orbit tables) are not implemented; a recipe that needs them is refused.</p></li>
 <li><p>Composite methods give energies only: no gradients, so they cannot be used to
@@ -695,6 +765,7 @@ optimize structures or by steps that need forces.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-a-composite-method">Using a composite method</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-shipped-recipes">The shipped recipes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-a-recipe">Writing a recipe</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parts-of-an-energy">Parts of an energy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-recipes-come-from">Where recipes come from</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-not-there-yet">What is not there yet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices-and-tables">Indices and tables</a></li>

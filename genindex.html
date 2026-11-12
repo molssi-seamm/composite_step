@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
+    <title>Index &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=b41936cd"></script>
+    <script src="_static/documentation_options.js?v=900c25b8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -522,6 +522,8 @@
 </li>
       <li><a href="api/composite_step.html#composite_step.recipes.Recipe.combine">combine() (composite_step.recipes.Recipe method)</a>
 </li>
+      <li><a href="api/composite_step.html#composite_step.evaluate.component_energy">component_energy() (in module composite_step.evaluate)</a>
+</li>
       <li><a href="api/composite_step.html#composite_step.recipes.COMPONENT_FIELDS">COMPONENT_FIELDS (in module composite_step.recipes)</a>
 </li>
       <li><a href="api/composite_step.html#composite_step.evaluate.component_levels">component_levels() (in module composite_step.evaluate)</a>
@@ -641,6 +643,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/composite_step.html#composite_step.recipes.DERIVED_PARTS">DERIVED_PARTS (in module composite_step.recipes)</a>
+</li>
       <li><a href="api/composite_step.html#composite_step.recipes.Recipe.description">description (composite_step.recipes.Recipe property)</a>
 </li>
       <li><a href="api/composite_step.html#composite_step.composite_step.CompositeStep.description">description() (composite_step.composite_step.CompositeStep method)</a>
@@ -679,6 +683,8 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/composite_step.html#composite_step.recipes.ComponentEnergy.factors">factors (composite_step.recipes.ComponentEnergy attribute)</a>
+</li>
       <li><a href="api/composite_step.html#composite_step.recipes.FIELDS">FIELDS (in module composite_step.recipes)</a>
 </li>
       <li><a href="api/composite_step.html#composite_step.recipes.Recipe.fingerprint">fingerprint() (composite_step.recipes.Recipe method)</a>
@@ -727,13 +733,15 @@
 </li>
       <li><a href="api/composite_step.html#composite_step.evaluate.HARTREE_TO_KJ">HARTREE_TO_KJ (in module composite_step.evaluate)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/composite_step.html#composite_step.substep.Substep.header">header (composite_step.substep.Substep property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/composite_step.html#composite_step.recipes.ComponentEnergy.hf">hf (composite_step.recipes.ComponentEnergy attribute)</a>
 </li>
       <li><a href="api/composite_step.html#composite_step.recipes.hf_extrapolate_exp">hf_extrapolate_exp() (in module composite_step.recipes)</a>
+</li>
+      <li><a href="api/composite_step.html#composite_step.recipes.HF_TYPE_PARTS">HF_TYPE_PARTS (in module composite_step.recipes)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -818,6 +826,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/composite_step.html#composite_step.tk_composite.TkComposite.namespace">namespace (composite_step.tk_composite.TkComposite attribute)</a>
 </li>
+      <li><a href="api/composite_step.html#composite_step.recipes.Recipe.needs_parts">needs_parts (composite_step.recipes.Recipe property)</a>
+</li>
       <li><a href="api/composite_step.html#composite_step.tk_composite.TkComposite.node">node (composite_step.tk_composite.TkComposite attribute)</a>
 </li>
   </ul></td>
@@ -854,9 +864,15 @@
 </li>
       <li><a href="api/composite_step.html#composite_step.composite.Composite.parser">parser (composite_step.composite.Composite attribute)</a>
 </li>
+      <li><a href="api/composite_step.html#composite_step.recipes.ComponentEnergy.part">part() (composite_step.recipes.ComponentEnergy method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/composite_step.html#composite_step.recipes.PART_FUNCTIONS">PART_FUNCTIONS (in module composite_step.recipes)</a>
+</li>
+      <li><a href="api/composite_step.html#composite_step.recipes.ComponentEnergy.parts">parts (composite_step.recipes.ComponentEnergy attribute)</a>
+</li>
+      <li><a href="api/composite_step.html#composite_step.recipes.parts_used">parts_used() (in module composite_step.recipes)</a>
 </li>
       <li><a href="api/composite_step.html#composite_step.evaluate.CompositeEvaluator.path">path (composite_step.evaluate.CompositeEvaluator attribute)</a>
 
@@ -879,6 +895,8 @@
       <li><a href="api/composite_step.html#composite_step.recipes.RecipeError">RecipeError</a>
 </li>
       <li><a href="api/composite_step.html#composite_step.recipes.RecipeLibrary">RecipeLibrary (class in composite_step.recipes)</a>
+</li>
+      <li><a href="api/composite_step.html#composite_step.recipes.ComponentEnergy.reference">reference (composite_step.recipes.ComponentEnergy attribute)</a>
 </li>
       <li><a href="api/composite_step.html#composite_step.recipes.Recipe.requires">requires (composite_step.recipes.Recipe property)</a>
 </li>

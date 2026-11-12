@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
+    <title>History &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=b41936cd"></script>
+    <script src="_static/documentation_options.js?v=900c25b8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,21 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.12.1 – Recipes that use the parts of an energy</dt><dd><ul class="simple">
+<li><p>Recipes can use the parts of a component’s energy: <code class="docutils literal notranslate"><span class="pre">part(c,</span> <span class="pre">&quot;name&quot;)</span></code> for
+the HF energy, the CABS singles, the correlation energies and the triples that
+the program reports, and parts derived from them (the CCSD-F12 correlation, the
+scaled triples (T*), …). <code class="docutils literal notranslate"><span class="pre">hf_part(c)</span></code> is the HF energy and <code class="docutils literal notranslate"><span class="pre">corr_part(c)</span></code>
+the correlation alone, so a recipe can, for example, extrapolate the
+correlation energy and not the HF energy.</p></li>
+<li><p>A recipe that splits an F12 calculation into HF and correlation must account
+for its CABS singles, and the HF parts of components with different references
+cannot be combined unless the recipe allows it; such recipes are refused when
+they are read.</p></li>
+<li><p>A stored energy without the parts a recipe needs is computed again; parts are
+never derived.</p></li>
+</ul>
+</dd>
 <dt>2026.11.12 – Recipes that combine several calculations run in every step</dt><dd><ul class="simple">
 <li><p>A composite recipe that combines several calculations now runs wherever a
 model chemistry is used: the Energy step, the Thermochemistry step’s CBH

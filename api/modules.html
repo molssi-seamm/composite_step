@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>composite_step &#8212; SEAMM Composite Plug-in 2026.11.12 documentation</title>
+    <title>composite_step &#8212; SEAMM Composite Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b41936cd"></script>
+    <script src="../_static/documentation_options.js?v=900c25b8"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -590,6 +590,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.HARTREE_TO_KJ"><code class="docutils literal notranslate"><span class="pre">HARTREE_TO_KJ</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.component_energy"><code class="docutils literal notranslate"><span class="pre">component_energy()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.component_levels"><code class="docutils literal notranslate"><span class="pre">component_levels()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.composite_data"><code class="docutils literal notranslate"><span class="pre">composite_data()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.evaluate.composite_record"><code class="docutils literal notranslate"><span class="pre">composite_record()</span></code></a></li>
@@ -612,16 +613,22 @@
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.COMPONENT_FIELDS"><code class="docutils literal notranslate"><span class="pre">COMPONENT_FIELDS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.ComponentEnergy"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.ComponentEnergy.correlation"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.correlation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.ComponentEnergy.factors"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.factors</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.ComponentEnergy.hf"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.hf</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.ComponentEnergy.part"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.part()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.ComponentEnergy.parts"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.parts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.ComponentEnergy.reference"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.reference</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.ComponentEnergy.total"><code class="docutils literal notranslate"><span class="pre">ComponentEnergy.total</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.DEGREES"><code class="docutils literal notranslate"><span class="pre">DEGREES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.DERIVED_PARTS"><code class="docutils literal notranslate"><span class="pre">DERIVED_PARTS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.DESCRIPTIVE"><code class="docutils literal notranslate"><span class="pre">DESCRIPTIVE</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.FIELDS"><code class="docutils literal notranslate"><span class="pre">FIELDS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.FORBIDDEN_IN_NAME"><code class="docutils literal notranslate"><span class="pre">FORBIDDEN_IN_NAME</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.FUNCTIONS"><code class="docutils literal notranslate"><span class="pre">FUNCTIONS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.GEOMETRY"><code class="docutils literal notranslate"><span class="pre">GEOMETRY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.HF_TYPE_PARTS"><code class="docutils literal notranslate"><span class="pre">HF_TYPE_PARTS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.OWNER"><code class="docutils literal notranslate"><span class="pre">OWNER</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.PART_FUNCTIONS"><code class="docutils literal notranslate"><span class="pre">PART_FUNCTIONS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.Recipe"><code class="docutils literal notranslate"><span class="pre">Recipe</span></code></a><ul>
@@ -634,6 +641,7 @@
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.Recipe.geometry"><code class="docutils literal notranslate"><span class="pre">Recipe.geometry</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.Recipe.model_chemistry"><code class="docutils literal notranslate"><span class="pre">Recipe.model_chemistry</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.Recipe.name"><code class="docutils literal notranslate"><span class="pre">Recipe.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.Recipe.needs_parts"><code class="docutils literal notranslate"><span class="pre">Recipe.needs_parts</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.Recipe.path"><code class="docutils literal notranslate"><span class="pre">Recipe.path</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.Recipe.requires"><code class="docutils literal notranslate"><span class="pre">Recipe.requires</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="composite_step.html#composite_step.recipes.Recipe.source"><code class="docutils literal notranslate"><span class="pre">Recipe.source</span></code></a></li>
@@ -656,6 +664,7 @@
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.hf_extrapolate_exp"><code class="docutils literal notranslate"><span class="pre">hf_extrapolate_exp()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.load_recipe"><code class="docutils literal notranslate"><span class="pre">load_recipe()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.parse_combine"><code class="docutils literal notranslate"><span class="pre">parse_combine()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.parts_used"><code class="docutils literal notranslate"><span class="pre">parts_used()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.scale"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.schwenke"><code class="docutils literal notranslate"><span class="pre">schwenke()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="composite_step.html#composite_step.recipes.shipped_directory"><code class="docutils literal notranslate"><span class="pre">shipped_directory()</span></code></a></li>
