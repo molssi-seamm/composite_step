@@ -3,7 +3,6 @@
 """Non-graphical part of the Composite step in a SEAMM flowchart"""
 
 import logging
-from pathlib import Path
 import importlib.resources
 import pprint  # noqa: F401
 
@@ -124,18 +123,16 @@ class Composite(seamm.Node):
             P = self.parameters.values_to_dict()
 
         text = (
-            "Please replace this with a short summary of the "
-            "Composite step, including key parameters."
+            "Composite methods are used through a Model Chemistry step, as "
+            "SEAMM:CMP@<recipe> (e.g. SEAMM:CMP@revDSD-r2SCAN-3c-HO), by the steps "
+            "that take a model chemistry, such as Thermochemistry. This step "
+            "itself does nothing yet."
         )
 
         return self.header + "\n" + __(text, **P, indent=4 * " ").__str__()
 
     def run(self):
-        """Run a Composite step.
-
-        Parameters
-        ----------
-        None
+        """Run a Composite step: print what it does, which is nothing yet.
 
         Returns
         -------
@@ -143,67 +140,8 @@ class Composite(seamm.Node):
             The next node object in the flowchart.
         """
         next_node = super().run(printer)
-        # Get the values of the parameters, dereferencing any variables
-        P = self.parameters.current_values_to_dict(
-            context=seamm.flowchart_variables._data
-        )
-
-        # Print what we are doing
-        printer.important(__(self.description_text(P), indent=self.indent))
-
-        directory = Path(self.directory)
-        directory.mkdir(parents=True, exist_ok=True)
-
-        # Get the current system and configuration (ignoring the system...)
-        _, configuration = self.get_system_configuration(None)
-
-        # Results data
-        data = {}
-
-        # Temporary code just to print the parameters. You will need to change
-        # this!
-        for key in P:
-            print("{:>15s} = {}".format(key, P[key]))
-            printer.normal(
-                __(
-                    "{key:>15s} = {value}",
-                    key=key,
-                    value=P[key],
-                    indent=4 * " ",
-                    wrap=False,
-                    dedent=False,
-                )
-            )
-
-        # Analyze the results
-        self.analyze()
-        # Put any requested results into variables or tables
-        self.store_results(
-            configuration=configuration,
-            data=data,
-        )
-        # Add other citations here or in the appropriate place in the code.
-        # Add the bibtex to data/references.bib, and add a self.reference.cite
-        # similar to the above to actually add the citation to the references.
-
+        printer.important(__(self.description_text({}), indent=self.indent))
         return next_node
 
     def analyze(self, indent="", **kwargs):
-        """Do any analysis of the output from this step.
-
-        Also print important results to the local step.out file using
-        "printer".
-
-        Parameters
-        ----------
-        indent: str
-            An extra indentation for the output
-        """
-        printer.normal(
-            __(
-                "This is a placeholder for the results from the Composite step",
-                indent=4 * " ",
-                wrap=True,
-                dedent=False,
-            )
-        )
+        """Nothing to analyze yet."""

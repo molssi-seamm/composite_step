@@ -35,7 +35,14 @@ A SEAMM plug-in for composite methods: energies from recipes of ordinary calcula
 Features
 --------
 
-* Please edit this section!
+* Composite methods as model chemistries, ``SEAMM:CMP@<recipe>``, from recipes:
+  short YAML files that say how the energy is made from ordinary calculations.
+* A small, checked language for combining the energies: basis-set extrapolations
+  (inverse power, exponential HF, Schwenke), scaling and empirical terms.
+* Components are ordinary calculations with their own settings fingerprints, so
+  the fragment store reuses them.
+* The shipped recipes ``r2SCAN-3c-HO`` and ``revDSD-r2SCAN-3c-HO``, the
+  Thermochemistry step's ``quick`` and ``default`` presets.
 
 Acknowledgements
 ----------------

@@ -82,8 +82,5 @@ setup(
         'org.molssi.seamm': [
             'Composite = composite_step:CompositeStep',
         ],
-        'org.molssi.seamm.tk': [
-            'Composite = composite_step:CompositeStep',
-        ],
     }
 )
