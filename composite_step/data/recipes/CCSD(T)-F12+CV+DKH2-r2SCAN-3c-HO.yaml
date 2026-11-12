@@ -1,0 +1,51 @@
+recipe: CCSD(T)-F12+CV+DKH2-r2SCAN-3c-HO
+version: 1
+description: >-
+  Tier-A computed reference values (H-Ar). Valence CCSD(T)-F12D/RI with
+  cc-pVTZ-F12 (frozen valence core), plus the core-valence correlation
+  (CCSD(T)/cc-pwCVTZ, outer core correlated minus frozen) and the scalar
+  relativistic correction (DKH2 with a point nucleus and cc-pVTZ-DK, minus the
+  non-relativistic CCSD(T)/cc-pVTZ), on r2SCAN-3c geometries with scaled harmonic
+  thermal terms. ORCA's F12 (F12D/RI) is not Molpro's F12b; labelled ORCA-F12.
+reference: >-
+  After W4 (Karton, Rabinovich, Martin, Ruscic, J. Chem. Phys. 125, 144108
+  (2006)): valence CCSD(T), inner-shell and scalar relativistic terms. The
+  nucleus model is point: our explicit choice; W4 does not state one.
+geometry:
+  level: ORCA:CMP@R2SCAN-3C
+frequencies:
+  scale_zpe: 0.9899
+  scale_source: >-
+    fitted to the anharmonic ZPVEs of 22 W4-2006 molecules (SEAMM, 2026-11);
+    seamm_thermochemistry's ZPE table for R2SCAN-3C
+frozen_core_definitions:
+  # Frozen orbitals per element. valence: the cc-pVnZ convention; inner: the
+  # cc-pwCVnZ convention (the outer core correlated).
+  valence: {H: 0, Li: 1, Be: 1, B: 1, C: 1, N: 1, O: 1, F: 1, Ne: 1, Na: 5, Mg: 5, Al: 5, Si: 5, P: 5, S: 5, Cl: 5, Ar: 5}
+  inner: {H: 0, Li: 0, Be: 0, B: 0, C: 0, N: 0, O: 0, F: 0, Ne: 0, Na: 1, Mg: 1, Al: 1, Si: 1, P: 1, S: 1, Cl: 1, Ar: 1}
+frozen_core_sources:
+  H: "nothing to freeze"
+  Li, Be: "verified: Prascher, Woon, Peterson, Dunning, Wilson, TCA 128, 69 (2011), sections 3.1 and 3.4, Fig. 1 and 5 captions: cc-pVnZ freeze 1s; cc-pwCVnZ correlate all electrons"
+  B-Ne: "verified: W4 (Karton et al., JCP 125, 144108 (2006)) freezes 1s in the valence steps; cc-pwCVnZ correlate all electrons"
+  Na, Mg: "verified: Prascher et al. 2011, section 3.4: cc-pVnZ freeze 1s2s2p; cc-pwCVnZ correlate 2s2p, 'correlation of the 1s2 electrons of Na and Mg is not included'"
+  Al-Ar: "verified: W4 freezes 1s2s2p in the valence steps; inner keeps 1s frozen (Martin and Parthiban, W1/W2 review, arXiv physics/0511008, section 2.5)"
+components:
+  f12:
+    level: ORCA:QC@CCSD(T)-F12D_RI/cc-pVTZ-F12
+    frozen_core: valence
+  cv_ae:
+    level: ORCA:QC@CCSD(T)/cc-pwCVTZ
+    frozen_core: inner
+  cv_fc:
+    level: ORCA:QC@CCSD(T)/cc-pwCVTZ
+    frozen_core: valence
+  rel:
+    level: ORCA:QC@CCSD(T)/cc-pVTZ-DK
+    frozen_core: valence
+    relativistic: DKH2
+    nucleus: point
+  nonrel:
+    level: ORCA:QC@CCSD(T)/cc-pVTZ
+    frozen_core: valence
+combine: |
+  E0 = f12 + (cv_ae - cv_fc) + (rel - nonrel)

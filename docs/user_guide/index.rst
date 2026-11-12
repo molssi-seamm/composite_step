@@ -41,6 +41,34 @@ The shipped recipes
     r2SCAN-3c geometry and frequencies, as above, and the
     revDSD-PBEP86-D4(2021)/def2-TZVPP energy at that geometry.
 
+Three recipes give accurate reference values, after W4 (Karton et al., J. Chem.
+Phys. 125, 144108 (2006)), on r2SCAN-3c geometries with scaled harmonic thermal
+terms. Each adds to a valence CCSD(T) energy the core-valence correlation (all of
+the outer core correlated, minus a frozen valence core, with cc-pwCVTZ) and the
+scalar relativistic correction (DKH2 with a point nucleus, minus the
+non-relativistic calculation):
+
+``CCSD(T)-F12+CV+DKH2-r2SCAN-3c-HO``
+    The valence energy from CCSD(T)-F12D/RI with cc-pVTZ-F12 (ORCA's F12, not
+    Molpro's F12b), and the relativistic correction with cc-pVTZ-DK. For H-Ar:
+    cc-pVTZ-F12 exists for no heavier element.
+
+``CCSD(T)-CBS(TQ)+CV+DKH2-r2SCAN-3c-HO``
+    The HF energy with cc-pVQZ and the CCSD(T) correlation extrapolated from
+    cc-pVTZ and cc-pVQZ, and the relativistic correction with cc-pVTZ-DK. For H-Ar
+    and Ga-Br, with all-electron basis sets.
+
+``CCSD(T)-CBS(TQ)+CV+DKH2(decontracted)-r2SCAN-3c-HO``
+    As the previous one, but the relativistic correction uses decontracted
+    cc-pVTZ in both halves, for species with Ca, which has no DK basis. It agrees
+    with the cc-pVTZ-DK correction within 0.003 kJ/mol on two W4 reactions and
+    within 0.06 kJ/mol on GeH4 -> GeH2 + H2. X2C with x2c-TZVPall was not used:
+    on CaH2 its correction to the atomization energy differed from decontracted
+    DKH2 by 0.82 kJ/mol.
+
+The core-valence and relativistic corrections agree with W4's to 0.13 and 0.01
+kJ/mol on the reactions CO + 3 H2 -> CH4 + H2O and CO2 + 4 H2 -> CH4 + 2 H2O.
+
 Recipes are named by what they contain, not by the role they play in another step,
 so a result labelled with a recipe stays true when presets change.
 
@@ -164,6 +192,38 @@ The parts belong to their calculation. They are stored with it in the fragment
 store, and a recipe reuses them only from the same calculation (the same settings
 fingerprint). A stored energy without parts, needed by a recipe that uses parts, is
 computed again; parts are never derived.
+
+Frozen cores and relativistic corrections
+=========================================
+
+A component can be given:
+
+``frozen_core``
+    The name of a set in ``frozen_core_definitions`` (the number of frozen
+    ORBITALS for each element), ``none`` (all electrons correlated), or
+    ``default`` (the program's choice; not allowed in shipped recipes). A
+    structure with an element the set does not cover is refused. ORCA counts core
+    electrons, and its defaults are not the usual conventions for Li, Be, Na, Mg,
+    K, Ca or Ga-Kr, so recipes give the counts explicitly. After each calculation
+    the number of frozen orbitals is checked against the count asked for.
+
+``relativistic``, ``nucleus``
+    A scalar-relativistic Hamiltonian, ``DKH2`` or ``X2C``, with the nucleus model
+    stated explicitly, ``point`` or ``finite``. The shipped recipes use a point
+    nucleus: our explicit choice; W4 does not state one.
+
+``decontract``
+    ``true`` decontracts the orbital basis.
+
+The shipped recipes' sets are ``valence`` (the cc-pVnZ conventions: 1s frozen for
+Li-Ne, 1s-2p for Na-Ar, 1s-3p for K and Ca, 1s-3d for Ga-Kr) and ``inner`` (the
+cc-pwCVnZ conventions: all electrons for Li-Ne, 1s frozen for Na-Ar, 1s-2p for K
+and Ca and for Ga-Kr), each with its source in ``frozen_core_sources``.
+
+A difference of two components, ``a - b``, must change one thing only: the
+method, the basis set, the frozen core, or the relativistic Hamiltonian (with its
+basis), so that it is the correction it is meant to be. Anything else is refused
+when the recipe is read.
 
 Where recipes come from
 =======================

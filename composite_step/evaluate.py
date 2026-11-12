@@ -111,6 +111,54 @@ def component_levels(recipe):
     return levels
 
 
+def component_mc(recipe, source, available=None):
+    """The ``_model_chemistry`` wrapper a component runs with: its level, plus the
+    settings the recipe gives it (frozen core, relativistic Hamiltonian, nucleus
+    model) as options, checked against what the program says it can do, and a
+    level label that tells apart components of one level with other settings."""
+    from .recipes import component_settings
+
+    level = component_levels(recipe)[source]
+    mc = resolve_level(level, available)
+    comp = recipe.geometry if source == GEOMETRY else recipe.components[source]
+    settings, label = component_settings(recipe, comp)
+    options = mc.get("options") or {}
+    capabilities = options.get("capabilities")
+    problems = []
+    if source in recipe.needs_parts and capabilities is not None:
+        if not capabilities.get("energy parts"):
+            problems.append("it does not report the parts of its energy")
+    if settings:
+        if capabilities is None:
+            problems.append("it does not say what settings it can take")
+        else:
+            fc = settings.get("frozen_core")
+            if fc is not None:
+                kind = fc if fc in ("none", "default") else "per-element"
+                if kind not in capabilities.get("frozen_core", ()):
+                    problems.append(f"it cannot take a {kind} frozen core")
+            if settings.get("decontract") and not capabilities.get("decontract"):
+                problems.append("it cannot decontract the basis")
+            rel = settings.get("relativistic")
+            if rel is not None:
+                if rel not in capabilities.get("relativistic", ()):
+                    problems.append(f"it has no {rel} Hamiltonian")
+                if settings.get("nucleus") not in capabilities.get("nucleus", ()):
+                    problems.append(
+                        f"it has no {settings.get('nucleus')} nucleus model"
+                    )
+    if problems:
+        raise RecipeError(
+            f"The recipe {recipe.name}: the component '{source}' ({level}) cannot run "
+            f"as the recipe asks: {'; '.join(problems)}."
+        )
+    if settings:
+        mc = dict(mc)
+        mc["options"] = {**options, **settings}
+        mc["level"] = mc["level"] + label
+    return mc
+
+
 def resolve_level(level, available=None):
     """The ``_model_chemistry`` wrapper of a level spec, as the Model Chemistry
     step resolves it (any basis for an offered owner/type/method)."""
@@ -185,7 +233,7 @@ def evaluate_recipe(
         evaluator_factory = seamm_exec.Evaluator
 
     levels = component_levels(recipe)
-    mcs = {source: resolve_level(level, available) for source, level in levels.items()}
+    mcs = {source: component_mc(recipe, source, available) for source in levels}
     mcs = dict(sorted(mcs.items(), key=lambda item: cost_key(item[1], item[0])))
     options = options or {}
     if directory is None:
@@ -464,7 +512,7 @@ def delegate(model_chemistry):
             "calculations; it runs through composite_step.evaluate_recipe, not as "
             "one task per structure."
         )
-    mc = resolve_level(component_levels(recipe)[source])
+    mc = component_mc(recipe, source)
     return recipe, source, mc, provider_of(mc["step"])
 
 
