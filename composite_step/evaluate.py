@@ -400,6 +400,7 @@ def composite_data(recipe, model_chemistry, components, results):
                     "energy": c["energy"],
                     "how": c.get("how", "computed"),
                     "model chemistry": c.get("model_chemistry"),
+                    "parts": c.get("parts"),
                 }
                 for source, c in components.items()
             },
