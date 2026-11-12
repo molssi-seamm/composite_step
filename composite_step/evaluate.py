@@ -204,9 +204,11 @@ def evaluate_recipe(
         )
     constants_kj = {k: v * HARTREE_TO_KJ for k, v in constants.items()}
 
+    needs_parts = recipe.needs_parts
     out = {key: CompositeResult(key=key, ok=True) for key in structures}
     for source, mc in mcs.items():
         to_run = []
+        why = {}
         for key, configuration in structures.items():
             if not out[key].ok:
                 continue
@@ -214,10 +216,19 @@ def evaluate_recipe(
             if got is not None:
                 energy, how = got[0], got[1]
                 record = got[2] if len(got) > 2 else None
+                record = record if isinstance(record, dict) else None
+                parts = (record or {}).get("energy parts")
+                if source in needs_parts and not parts:
+                    # A stored energy without its parts: compute it again, never
+                    # derive the parts
+                    why[key] = f"computed ({how} has no energy parts)"
+                    to_run.append(key)
+                    continue
                 out[key].components[source] = {
                     "energy": energy,
                     "how": how,
-                    "record": record if isinstance(record, dict) else None,
+                    "record": record,
+                    "parts": parts,
                     "model_chemistry": mc["level"],
                 }
             else:
@@ -244,10 +255,19 @@ def evaluate_recipe(
                     )
                     continue
                 record = (result.data or {}).get("calculation")
+                parts = (result.data or {}).get("energy parts")
+                if source in needs_parts and not parts:
+                    composite.ok = False
+                    composite.reason = (
+                        f"the {source} component ({mc['level']}) gives no energy "
+                        "parts, which the recipe needs"
+                    )
+                    continue
                 composite.components[source] = {
                     "energy": result.energy,
-                    "how": "computed",
+                    "how": why.get(result.key, "computed"),
                     "record": record if isinstance(record, dict) else None,
+                    "parts": parts,
                     "model_chemistry": mc["level"],
                 }
         for key in to_run:
@@ -258,7 +278,10 @@ def evaluate_recipe(
     for composite in out.values():
         if not composite.ok:
             continue
-        energies = {s: c["energy"] for s, c in composite.components.items()}
+        energies = {
+            s: component_energy(c, s in needs_parts)
+            for s, c in composite.components.items()
+        }
         try:
             composite.results = recipe.combine(energies, constants_kj)
         except (RecipeError, ArithmeticError) as e:
@@ -384,6 +407,23 @@ def composite_data(recipe, model_chemistry, components, results):
         },
         "calculation": composite_record(recipe, model_chemistry, components),
     }
+
+
+def component_energy(component, with_parts):
+    """The energy of a component for the combination (kJ/mol), with its parts
+    converted to kJ/mol when the recipe uses them."""
+    from .recipes import ComponentEnergy
+
+    if not with_parts:
+        return component["energy"]
+    byproducts = component.get("parts") or {}
+    factor = HARTREE_TO_KJ if byproducts.get("units", "E_h") == "E_h" else 1.0
+    return ComponentEnergy(
+        total=component["energy"],
+        parts={k: v * factor for k, v in (byproducts.get("parts") or {}).items()},
+        factors=dict(byproducts.get("factors") or {}),
+        reference=byproducts.get("reference"),
+    )
 
 
 # -- The single-component task route for any consumer of a model chemistry ---------
