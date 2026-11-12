@@ -1,0 +1,77 @@
+composite\_step package
+=======================
+
+Submodules
+----------
+
+composite\_step.composite module
+--------------------------------
+
+.. automodule:: composite_step.composite
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+composite\_step.composite\_parameters module
+--------------------------------------------
+
+.. automodule:: composite_step.composite_parameters
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+composite\_step.composite\_step module
+--------------------------------------
+
+.. automodule:: composite_step.composite_step
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+composite\_step.evaluate module
+-------------------------------
+
+.. automodule:: composite_step.evaluate
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+composite\_step.metadata module
+-------------------------------
+
+.. automodule:: composite_step.metadata
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+composite\_step.recipes module
+------------------------------
+
+.. automodule:: composite_step.recipes
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+composite\_step.substep module
+------------------------------
+
+.. automodule:: composite_step.substep
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+composite\_step.tk\_composite module
+------------------------------------
+
+.. automodule:: composite_step.tk_composite
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: composite_step
+   :members:
+   :show-inheritance:
+   :undoc-members:

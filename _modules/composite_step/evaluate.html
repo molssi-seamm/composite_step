@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>composite_step.evaluate &#8212; SEAMM Composite Plug-in 2026.11.11 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../../_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/composite_step/evaluate';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2026.11.11" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/SEAMM logo.png" class="logo__image only-light" alt=""/>
+    <img src="../../_static/SEAMM Inverted 288x181.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Composite</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Documentation
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../authors.html">
+    Development Team
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../history.html">
+    History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi-seamm.github.io">
+    Main SEAMM documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi-seamm.github.io">
+    SEAMM Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/molssi-seamm/geometry_analysis_step" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-twitter fa-lg" aria-hidden="true"></i><span class="visually-hidden">Twitter</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../authors.html">
+    Development Team
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../history.html">
+    History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi-seamm.github.io">
+    Main SEAMM documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi-seamm.github.io">
+    SEAMM Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/molssi-seamm/geometry_analysis_step" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-twitter fa-lg" aria-hidden="true"></i><span class="visually-hidden">Twitter</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">composite_step.evaluate</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for composite_step.evaluate</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">"""Running a recipe: its components as ordinary calculations, then the combination.</span>
+
+<span class="sd">Each component is an ordinary single point at the recipe's geometry, run through</span>
+<span class="sd">its own model chemistry (``ORCA:DFT@...``) by seamm_exec's :class:`Evaluator`:</span>
+<span class="sd">one evaluator per component over all the structures, so the structures of a</span>
+<span class="sd">component run in parallel, as tasks or over MDI as the Evaluator chooses. Each</span>
+<span class="sd">component's result is the code's ordinary result with its ordinary calculation</span>
+<span class="sd">record and settings fingerprint, so the fragment store finds and keeps components,</span>
+<span class="sd">never composites, and a component shared by two recipes is computed once.</span>
+
+<span class="sd">Energies are combined in kJ/mol, as the Evaluator returns them. Every result of a</span>
+<span class="sd">``combine`` block scales like an energy (homogeneous of degree 1 in the energies,</span>
+<span class="sd">checked when the recipe is read: see :data:`composite_step.recipes.DEGREES`), so</span>
+<span class="sd">the result is the same in any unit; only the empirical constants, which recipes</span>
+<span class="sd">give in E_h, are converted here. A recipe of one component therefore gives exactly that</span>
+<span class="sd">component's energy, with no unit conversion of it.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.recipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">GEOMETRY</span><span class="p">,</span> <span class="n">PART_FUNCTIONS</span><span class="p">,</span> <span class="n">RecipeError</span><span class="p">,</span> <span class="n">_names_used</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1">#: kJ/mol per E_h (CODATA 2018, as seamm_util's pint registry).</span>
+<span class="n">HARTREE_TO_KJ</span> <span class="o">=</span> <span class="mf">2625.4996394798254</span>
+
+
+<div class="viewcode-block" id="CompositeResult">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.CompositeResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CompositeResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One structure's composite energy.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    key : str</span>
+<span class="sd">    ok : bool</span>
+<span class="sd">    E0 : float or None</span>
+<span class="sd">        kJ/mol.</span>
+<span class="sd">    results : dict</span>
+<span class="sd">        Every value ``combine`` defines (E0 among them), kJ/mol.</span>
+<span class="sd">    components : dict</span>
+<span class="sd">        Per component: ``energy`` (kJ/mol), ``how`` ("computed", or what the</span>
+<span class="sd">        consumer's lookup said), ``record`` (the calculation record, if</span>
+<span class="sd">        computed) and ``model_chemistry``.</span>
+<span class="sd">    reason : str or None</span>
+<span class="sd">        Why it failed.</span>
+<span class="sd">    """</span>
+
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">E0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">results</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">components</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="energy_sources">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.energy_sources">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">energy_sources</span><span class="p">(</span><span class="n">recipe</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The names ``combine`` takes energies from: components, and ``geometry``</span>
+<span class="sd">    when the geometry level's energy is used. Components named only inside</span>
+<span class="sd">    hf_part/corr_part count too."""</span>
+    <span class="n">used</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">recipe</span><span class="o">.</span><span class="n">statements</span><span class="p">:</span>
+        <span class="n">plain</span><span class="p">,</span> <span class="n">parts</span> <span class="o">=</span> <span class="n">_names_used</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">used</span> <span class="o">|=</span> <span class="n">plain</span> <span class="o">|</span> <span class="n">parts</span>
+    <span class="n">defined</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">recipe</span><span class="o">.</span><span class="n">statements</span><span class="p">}</span>
+    <span class="n">constants</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"empirical"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">used</span> <span class="o">-</span> <span class="n">defined</span> <span class="o">-</span> <span class="n">constants</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">components</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">GEOMETRY</span><span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="single_source">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.single_source">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">single_source</span><span class="p">(</span><span class="n">recipe</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The one energy E0 depends on, or None when it needs several (or the HF</span>
+<span class="sd">    part of one, which a plain energy does not give)."""</span>
+    <span class="n">sources</span> <span class="o">=</span> <span class="n">energy_sources</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">recipe</span><span class="o">.</span><span class="n">statements</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">_walk_calls</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">PART_FUNCTIONS</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">sources</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_walk_calls</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+
+    <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">sub</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span>
+
+
+<div class="viewcode-block" id="component_levels">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.component_levels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">component_levels</span><span class="p">(</span><span class="n">recipe</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""{source: level spec} for every energy the recipe combines, the geometry</span>
+<span class="sd">    level included when ``combine`` uses it. Phase 1 needs a complete ``level``</span>
+<span class="sd">    for each; method + basis on the recipe's chosen code comes with the code</span>
+<span class="sd">    choice (phase 2)."""</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">energy_sources</span><span class="p">(</span><span class="n">recipe</span><span class="p">)):</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">geometry</span> <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="n">GEOMETRY</span> <span class="k">else</span> <span class="n">recipe</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The recipe </span><span class="si">{</span><span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: '</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">' gives a method and basis but "</span>
+                <span class="s2">"no 'level'; choosing the code for it is not implemented yet."</span>
+            <span class="p">)</span>
+        <span class="n">levels</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="n">level</span>
+    <span class="k">return</span> <span class="n">levels</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_level">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.resolve_level">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_level</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ``_model_chemistry`` wrapper of a level spec, as the Model Chemistry</span>
+<span class="sd">    step resolves it (any basis for an offered owner/type/method)."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">model_chemistry_step.model_chemistry</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">availability_problem</span><span class="p">,</span>
+        <span class="n">discover_model_chemistries</span><span class="p">,</span>
+        <span class="n">match_model_chemistry</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">available</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="n">discover_model_chemistries</span><span class="p">(</span><span class="n">periodic_only</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">available</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="ow">or</span> <span class="n">match_model_chemistry</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="n">availability_problem</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">mc</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_recipe">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.evaluate_recipe">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_recipe</span><span class="p">(</span>
+    <span class="n">node</span><span class="p">,</span>
+    <span class="n">recipe</span><span class="p">,</span>
+    <span class="n">structures</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">lookup</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">constants</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">available</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">evaluator_factory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Composite"</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The composite energy of each structure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : seamm.Node</span>
+<span class="sd">        The step running it (its flowchart, executor, directory).</span>
+<span class="sd">    recipe : composite_step.recipes.Recipe</span>
+<span class="sd">    structures : {str: configuration}</span>
+<span class="sd">        The structures, by key (filesystem-safe keys: they name the tasks).</span>
+<span class="sd">    directory : Path, optional</span>
+<span class="sd">        Where the components' tasks go, ``&lt;directory&gt;/&lt;component&gt;``.</span>
+<span class="sd">    lookup : callable, optional</span>
+<span class="sd">        ``lookup(source, model_chemistry, key, configuration)`` -&gt; ``(energy</span>
+<span class="sd">        kJ/mol, how)`` or None: a value the consumer already has (from the</span>
+<span class="sd">        fragment store or an earlier run), which is then not computed.</span>
+<span class="sd">    constants : {str: float}, optional</span>
+<span class="sd">        The recipe's empirical values, E_h; converted to kJ/mol here.</span>
+<span class="sd">    available : dict, optional</span>
+<span class="sd">        The discovered model chemistries (to avoid discovering them again).</span>
+<span class="sd">    evaluator_factory : callable, optional</span>
+<span class="sd">        Makes the evaluators, ``factory(node, mc, properties=, directory=,</span>
+<span class="sd">        name=)``; seamm_exec.Evaluator by default (tests replace it).</span>
+<span class="sd">    name : str</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    {str: CompositeResult}</span>
+<span class="sd">        In the order of ``structures``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">evaluator_factory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">seamm_exec</span>
+
+        <span class="n">evaluator_factory</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">Evaluator</span>
+
+    <span class="n">levels</span> <span class="o">=</span> <span class="n">component_levels</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+    <span class="n">mcs</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span><span class="p">:</span> <span class="n">resolve_level</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span> <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">levels</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="n">known</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"empirical"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="n">constants</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">constants</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="n">known</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">constants</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The recipe </span><span class="si">{</span><span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> needs the empirical values "</span>
+            <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="n">constants_kj</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">*</span> <span class="n">HARTREE_TO_KJ</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">constants</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">CompositeResult</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">structures</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">mc</span> <span class="ow">in</span> <span class="n">mcs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">to_run</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">configuration</span> <span class="ow">in</span> <span class="n">structures</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">got</span> <span class="o">=</span> <span class="n">lookup</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">configuration</span><span class="p">)</span> <span class="k">if</span> <span class="n">lookup</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">got</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">energy</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">got</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"energy"</span><span class="p">:</span> <span class="n">energy</span><span class="p">,</span>
+                    <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
+                    <span class="s2">"record"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">"model_chemistry"</span><span class="p">:</span> <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">],</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">to_run</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">to_run</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">source</span> <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">with</span> <span class="n">evaluator_factory</span><span class="p">(</span>
+            <span class="n">node</span><span class="p">,</span>
+            <span class="n">mc</span><span class="p">,</span>
+            <span class="n">properties</span><span class="o">=</span><span class="p">(</span><span class="s2">"energy"</span><span class="p">,),</span>
+            <span class="n">directory</span><span class="o">=</span><span class="n">where</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">evaluator</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">to_run</span><span class="p">:</span>
+                <span class="n">evaluator</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">structures</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">results</span><span class="p">():</span>
+                <span class="n">composite</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">energy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">composite</span><span class="o">.</span><span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">composite</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"the </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> component (</span><span class="si">{</span><span class="n">mc</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]</span><span class="si">}</span><span class="s2">) failed: "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="n">record</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calculation"</span><span class="p">)</span>
+                <span class="n">composite</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"energy"</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+                    <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"computed"</span><span class="p">,</span>
+                    <span class="s2">"record"</span><span class="p">:</span> <span class="n">record</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">"model_chemistry"</span><span class="p">:</span> <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">],</span>
+                <span class="p">}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">to_run</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">ok</span> <span class="ow">and</span> <span class="n">source</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"the </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> component returned no result"</span>
+
+    <span class="k">for</span> <span class="n">composite</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">composite</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">energies</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s2">"energy"</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">composite</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">composite</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">energies</span><span class="p">,</span> <span class="n">constants_kj</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">RecipeError</span><span class="p">,</span> <span class="ne">ArithmeticError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">composite</span><span class="o">.</span><span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">composite</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"the combination failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">continue</span>
+        <span class="n">composite</span><span class="o">.</span><span class="n">E0</span> <span class="o">=</span> <span class="n">composite</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">"E0"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="c1"># -- The single-component task route for any consumer of a model chemistry ---------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_recipe_of</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">,</span> <span class="n">data_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.recipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecipeLibrary</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recipe"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recipe_version"</span><span class="p">)</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"recipes"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">data_path</span> <span class="ow">or</span> <span class="p">())]</span>
+    <span class="k">return</span> <span class="n">RecipeLibrary</span><span class="p">(</span><span class="n">extra_directories</span><span class="o">=</span><span class="n">extra</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="delegate">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.delegate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">delegate</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""(recipe, source, the source's ``_model_chemistry``, its provider) for a</span>
+<span class="sd">    recipe whose E0 depends on one energy; RecipeError otherwise."""</span>
+    <span class="n">recipe</span> <span class="o">=</span> <span class="n">_recipe_of</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">single_source</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The composite </span><span class="si">{</span><span class="n">model_chemistry</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]</span><span class="si">}</span><span class="s2"> combines several "</span>
+            <span class="s2">"calculations; it runs through composite_step.evaluate_recipe, not as "</span>
+            <span class="s2">"one task per structure."</span>
+        <span class="p">)</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">resolve_level</span><span class="p">(</span><span class="n">component_levels</span><span class="p">(</span><span class="n">recipe</span><span class="p">)[</span><span class="n">source</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">recipe</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">provider_of</span><span class="p">(</span><span class="n">mc</span><span class="p">[</span><span class="s2">"step"</span><span class="p">])</span></div>
+
+
+
+<span class="n">_PROVIDERS</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="provider_of">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.provider_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">provider_of</span><span class="p">(</span><span class="n">step</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The plug-in class (``get_task``/``analyze_task``) of a step, by its</span>
+<span class="sd">    stevedore name in ``org.molssi.seamm``, as model-chemistry discovery finds</span>
+<span class="sd">    it."""</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_PROVIDERS</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">stevedore</span>
+
+        <span class="n">manager</span> <span class="o">=</span> <span class="n">stevedore</span><span class="o">.</span><span class="n">ExtensionManager</span><span class="p">(</span>
+            <span class="n">namespace</span><span class="o">=</span><span class="s2">"org.molssi.seamm"</span><span class="p">,</span> <span class="n">invoke_on_load</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">extension</span> <span class="ow">in</span> <span class="n">manager</span><span class="p">:</span>
+            <span class="n">_PROVIDERS</span><span class="p">[</span><span class="n">extension</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">extension</span><span class="o">.</span><span class="n">plugin</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_PROVIDERS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No step '</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">' is installed"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_PROVIDERS</span><span class="p">[</span><span class="n">step</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="delegated_get_task">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.delegated_get_task">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">delegated_get_task</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``get_task`` of a one-energy recipe: the component's own task."""</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">provider</span> <span class="o">=</span> <span class="n">delegate</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_task</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delegated_analyze_task">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.evaluate.delegated_analyze_task">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">delegated_analyze_task</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``analyze_task`` of a one-energy recipe: the component's own results, with</span>
+<span class="sd">    the energy replaced by the recipe's E0 (kJ/mol) and the composite noted."""</span>
+    <span class="n">recipe</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">provider</span> <span class="o">=</span> <span class="n">delegate</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"gradients"</span> <span class="ow">in</span> <span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"properties"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalysisError</span>
+
+        <span class="k">raise</span> <span class="n">AnalysisError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The composite </span><span class="si">{</span><span class="n">model_chemistry</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]</span><span class="si">}</span><span class="s2"> has no gradients yet."</span>
+        <span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">provider</span><span class="o">.</span><span class="n">analyze_task</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"energy"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">energy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">combine</span><span class="p">({</span><span class="n">source</span><span class="p">:</span> <span class="n">energy</span><span class="p">})</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"component energy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"energy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">"E0"</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"composite"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"recipe"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"version"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="s2">"fingerprint"</span><span class="p">:</span> <span class="n">recipe</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(),</span>
+            <span class="s2">"component"</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
+            <span class="s2">"component model chemistry"</span><span class="p">:</span> <span class="n">mc</span><span class="p">[</span><span class="s2">"level"</span><span class="p">],</span>
+            <span class="s2">"results"</span><span class="p">:</span> <span class="n">results</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
