@@ -180,6 +180,10 @@ Thermochemistry step's CBH approach, and the others. A recipe that combines seve
 calculations runs each component as one batch of its own program over all the
 structures, the cheapest components first. A structure that fails one component is
 not sent to the later ones, and its result names the component that failed. Each
+component's memory and cores are its own program's; note that a program can use
+more memory than it is told: ORCA's canonical CCSD(T) with a quadruple-zeta basis
+used about 2.7 times its ``%maxcore``, so size such components by the memory they
+actually use. Each
 result carries the composite record: the recipe's fingerprint together with every
 component's settings fingerprint.
 
