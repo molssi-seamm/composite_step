@@ -78,6 +78,7 @@ COMPONENT_FIELDS = {
     "frozen_core",
     "density_fitting",
     "relativistic",
+    "nucleus",  # point | finite, required with a relativistic Hamiltonian
     "f12",
     "sp_shells",
     "convergence",
@@ -523,6 +524,11 @@ class Recipe:
         )
 
     @property
+    def uses_default_frozen_core(self):
+        """Whether a component leaves the frozen core to the program's default."""
+        return any(c.get("frozen_core") == "default" for c in self.components.values())
+
+    @property
     def needs_parts(self):
         """The components whose parts ``combine`` uses (hf_part, corr_part,
         part)."""
@@ -654,6 +660,9 @@ def validate(data):
                 "that it is the same in any unit"
             )
 
+    _check_core_and_relativity(data, components)
+    _check_subtracted_pairs(statements, components)
+
     # An F12 component split into hf_part + corr_part must account for its CABS
     # singles, which belong to neither
     for which, used in parts_used(statements).items():
@@ -676,6 +685,160 @@ def validate(data):
     if not isinstance(requires, list) or not all(isinstance(r, str) for r in requires):
         raise RecipeError("'requires' must be a list of capabilities")
     return statements
+
+
+RELATIVISTIC = ("none", "DKH2", "X2C")
+NUCLEUS = ("point", "finite")
+FROZEN_CORE_SPECIAL = ("none", "default")
+
+
+def _check_core_and_relativity(data, components):
+    """The frozen-core sets (orbitals per element) and each component's frozen
+    core, relativistic Hamiltonian and nucleus model."""
+    sets = data.get("frozen_core_definitions") or {}
+    if not isinstance(sets, dict):
+        raise RecipeError("'frozen_core_definitions' must be a mapping of name: set")
+    for name, counts in sets.items():
+        if name in FROZEN_CORE_SPECIAL:
+            raise RecipeError(f"'{name}' is reserved and cannot name a frozen-core set")
+        if not isinstance(counts, dict) or not all(
+            isinstance(n, int) and not isinstance(n, bool) and n >= 0
+            for n in counts.values()
+        ):
+            raise RecipeError(
+                f"The frozen-core set '{name}' must give a number of orbitals (an "
+                "integer, 0 or more) for each element"
+            )
+    for cname, comp in components.items():
+        fc = comp.get("frozen_core")
+        if fc is not None and fc not in FROZEN_CORE_SPECIAL and fc not in sets:
+            raise RecipeError(
+                f"The component '{cname}': no frozen-core set '{fc}' (the sets are "
+                f"{', '.join(sorted(sets)) or 'none'}; or 'none', 'default')"
+            )
+        rel = comp.get("relativistic", "none")
+        if rel not in RELATIVISTIC:
+            raise RecipeError(
+                f"The component '{cname}': relativistic must be one of "
+                f"{', '.join(RELATIVISTIC)}, not {rel!r}"
+            )
+        nucleus = comp.get("nucleus")
+        if rel != "none" and nucleus not in NUCLEUS:
+            raise RecipeError(
+                f"The component '{cname}' uses {rel}: give its nucleus model "
+                f"explicitly, nucleus: {' or '.join(NUCLEUS)}"
+            )
+        if rel == "none" and nucleus is not None:
+            raise RecipeError(
+                f"The component '{cname}' gives a nucleus model without a "
+                "relativistic Hamiltonian"
+            )
+
+
+def _level_parts(comp):
+    """(method, basis) of a component: from its level, or its method and basis."""
+    level = comp.get("level")
+    if not level:
+        return str(comp.get("method") or ""), str(comp.get("basis") or "")
+    rest = str(level).split("@", 1)[-1]
+    method, _, basis = rest.partition("/")
+    return method, basis
+
+
+def _differences(a, b):
+    """The kinds of difference between two components: method, basis, frozen
+    core, relativistic (Hamiltonian and nucleus), other settings."""
+    kinds = set()
+    (ma, ba), (mb, bb) = _level_parts(a), _level_parts(b)
+    if ma != mb:
+        kinds.add("method")
+    if ba != bb:
+        kinds.add("basis")
+    if a.get("frozen_core") != b.get("frozen_core"):
+        kinds.add("frozen core")
+    if (a.get("relativistic", "none"), a.get("nucleus")) != (
+        b.get("relativistic", "none"),
+        b.get("nucleus"),
+    ):
+        kinds.add("relativistic")
+    owner_a = str(a.get("level") or a.get("code") or "").split("@", 1)[0]
+    owner_b = str(b.get("level") or b.get("code") or "").split("@", 1)[0]
+    if owner_a != owner_b:
+        kinds.add("program")
+    skip = {
+        "level",
+        "code",
+        "frozen_core",
+        "relativistic",
+        "nucleus",
+        "method",
+        "basis",
+    }
+    for key in (set(a) | set(b)) - skip:
+        if a.get(key) != b.get(key):
+            kinds.add(key)
+    return kinds
+
+
+#: The ways the two components of a difference may differ: one thing at a time
+#: (a relativistic correction changes the Hamiltonian and, with it, to a
+#: recontracted basis)
+ALLOWED_PAIR_DIFFERENCES = (
+    {"method"},
+    {"basis"},
+    {"frozen core"},
+    {"relativistic"},
+    {"relativistic", "basis"},
+)
+
+
+def _check_subtracted_pairs(statements, components):
+    """A difference of two components (``a - b``) must change one thing only, so
+    that it is the correction it is meant to be."""
+    for _, node in statements:
+        for sub in ast.walk(node):
+            if not (
+                isinstance(sub, ast.BinOp)
+                and isinstance(sub.op, ast.Sub)
+                and isinstance(sub.left, ast.Name)
+                and isinstance(sub.right, ast.Name)
+                and sub.left.id in components
+                and sub.right.id in components
+            ):
+                continue
+            a, b = sub.left.id, sub.right.id
+            kinds = _differences(components[a], components[b])
+            if not kinds:
+                raise RecipeError(
+                    f"'{a} - {b}': the two components are the same calculation"
+                )
+            if kinds not in ALLOWED_PAIR_DIFFERENCES:
+                raise RecipeError(
+                    f"'{a} - {b}': the two components differ in "
+                    f"{', '.join(sorted(kinds))}; a difference must change one thing "
+                    "(method, basis, frozen core, or the relativistic Hamiltonian "
+                    "with its basis), so that it is the correction it is meant to be"
+                )
+
+
+def component_settings(recipe, comp):
+    """The settings a component's program is given beyond its level --
+    ``frozen_core`` (orbitals per element, "none" or "default"), ``relativistic``
+    and ``nucleus`` -- and a label for the level that tells them apart, so two
+    components of one level (all electrons and frozen core) are never mixed up."""
+    settings = {}
+    label = []
+    fc = comp.get("frozen_core")
+    if fc is not None:
+        sets = recipe.data.get("frozen_core_definitions") or {}
+        settings["frozen_core"] = sets.get(fc, fc)
+        label.append(f"fc={fc}")
+    rel = comp.get("relativistic", "none")
+    if rel != "none":
+        settings["relativistic"] = rel
+        settings["nucleus"] = comp["nucleus"]
+        label.append(f"{rel}({comp['nucleus']})")
+    return settings, "".join(f"|{x}" for x in label)
 
 
 def _check_level(what, level, allow_scale=False):
@@ -807,6 +970,12 @@ class RecipeLibrary:
                 recipe = load_recipe(path, source=source)
             except RecipeError as e:
                 self.problems.append(str(e))
+                continue
+            if source == "shipped" and recipe.uses_default_frozen_core:
+                self.problems.append(
+                    f"{path}: a shipped recipe must give its frozen cores explicitly, "
+                    "not 'default'; ignored"
+                )
                 continue
             key = (recipe.name, recipe.version)
             if key in self.recipes:
