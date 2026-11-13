@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>composite_step.evaluate &#8212; SEAMM Composite Plug-in 2026.11.12.2 documentation</title>
+    <title>composite_step.evaluate &#8212; SEAMM Composite Plug-in 2026.11.12.3 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=a7f4afd2"></script>
+    <script src="../../_static/documentation_options.js?v=038c2bcb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.2" />
+  <meta name="docsearch:version" content="2026.11.12.3" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -629,6 +629,9 @@
     <span class="n">mc</span> <span class="o">=</span> <span class="n">resolve_level</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span>
     <span class="n">comp</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">geometry</span> <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="n">GEOMETRY</span> <span class="k">else</span> <span class="n">recipe</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
     <span class="n">settings</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">component_settings</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="n">GEOMETRY</span> <span class="ow">and</span> <span class="s2">"reference"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">comp</span><span class="p">:</span>
+        <span class="c1"># The recipe's open-shell reference is for its correlated components</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"reference"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">options</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">capabilities</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"capabilities"</span><span class="p">)</span>
     <span class="n">problems</span> <span class="o">=</span> <span class="p">[]</span>
@@ -646,6 +649,9 @@
                     <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"it cannot take a </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> frozen core"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">capabilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">):</span>
                 <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"it cannot decontract the basis"</span><span class="p">)</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reference"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">capabilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reference"</span><span class="p">,</span> <span class="p">()):</span>
+                <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"it cannot use a </span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2"> reference for open shells"</span><span class="p">)</span>
             <span class="n">rel</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">rel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">rel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">capabilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">,</span> <span class="p">()):</span>

@@ -225,6 +225,22 @@ method, the basis set, the frozen core, or the relativistic Hamiltonian (with it
 basis), so that it is the correction it is meant to be. Anything else is refused
 when the recipe is read.
 
+Open-shell species
+==================
+
+``open_shell_reference`` in a recipe sets the reference its correlated components
+use for open-shell species (radicals, triplets, open-shell atoms): ``QRO``,
+quasi-restricted orbitals built from the UHF solution, or ``UHF``. A component can
+override it with its own ``reference``; both halves of a difference must use the
+same one. The geometry level keeps its program's default. ROHF is not offered:
+ORCA's canonical coupled cluster refuses it.
+
+The three tier-A recipes use QRO. It changes nothing for closed-shell species: their
+calculations, fingerprints and stored results are the same with or without it. For
+an open-shell species the calculation's settings fingerprint tells QRO and UHF
+apart, and after each run the reference the program used is checked against the
+one asked for.
+
 Where recipes come from
 =======================
 

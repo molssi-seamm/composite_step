@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM Composite Plug-in 2026.11.12.2 documentation</title>
+    <title>User Guide &#8212; SEAMM Composite Plug-in 2026.11.12.3 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=a7f4afd2"></script>
+    <script src="../_static/documentation_options.js?v=038c2bcb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.2" />
+  <meta name="docsearch:version" content="2026.11.12.3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -729,6 +729,20 @@ method, the basis set, the frozen core, or the relativistic Hamiltonian (with it
 basis), so that it is the correction it is meant to be. Anything else is refused
 when the recipe is read.</p>
 </section>
+<section id="open-shell-species">
+<h2>Open-shell species<a class="headerlink" href="#open-shell-species" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">open_shell_reference</span></code> in a recipe sets the reference its correlated components
+use for open-shell species (radicals, triplets, open-shell atoms): <code class="docutils literal notranslate"><span class="pre">QRO</span></code>,
+quasi-restricted orbitals built from the UHF solution, or <code class="docutils literal notranslate"><span class="pre">UHF</span></code>. A component can
+override it with its own <code class="docutils literal notranslate"><span class="pre">reference</span></code>; both halves of a difference must use the
+same one. The geometry level keeps its program’s default. ROHF is not offered:
+ORCA’s canonical coupled cluster refuses it.</p>
+<p>The three tier-A recipes use QRO. It changes nothing for closed-shell species: their
+calculations, fingerprints and stored results are the same with or without it. For
+an open-shell species the calculation’s settings fingerprint tells QRO and UHF
+apart, and after each run the reference the program used is checked against the
+one asked for.</p>
+</section>
 <section id="where-recipes-come-from">
 <h2>Where recipes come from<a class="headerlink" href="#where-recipes-come-from" title="Link to this heading">#</a></h2>
 <p>The shipped recipes come with the plug-in. Recipes of your own go in a
@@ -820,6 +834,7 @@ optimize structures or by steps that need forces.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-a-recipe">Writing a recipe</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parts-of-an-energy">Parts of an energy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#frozen-cores-and-relativistic-corrections">Frozen cores and relativistic corrections</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-shell-species">Open-shell species</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-recipes-come-from">Where recipes come from</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-not-there-yet">What is not there yet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices-and-tables">Indices and tables</a></li>

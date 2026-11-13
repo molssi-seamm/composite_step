@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>composite_step.recipes &#8212; SEAMM Composite Plug-in 2026.11.12.2 documentation</title>
+    <title>composite_step.recipes &#8212; SEAMM Composite Plug-in 2026.11.12.3 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=a7f4afd2"></script>
+    <script src="../../_static/documentation_options.js?v=038c2bcb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.2" />
+  <meta name="docsearch:version" content="2026.11.12.3" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -552,6 +552,7 @@
     <span class="s2">"empirical"</span><span class="p">,</span>
     <span class="s2">"atoms"</span><span class="p">,</span>
     <span class="s2">"allow_mixed_reference"</span><span class="p">,</span>
+    <span class="s2">"open_shell_reference"</span><span class="p">,</span>
     <span class="s2">"frozen_core_sources"</span><span class="p">,</span>
     <span class="s2">"uncertainty"</span><span class="p">,</span>
     <span class="s2">"validation"</span><span class="p">,</span>
@@ -569,13 +570,20 @@
     <span class="s2">"frozen_core_sources"</span><span class="p">,</span>
 <span class="p">}</span>
 
+<span class="c1">#: Fields left out of the recipe's own fingerprint although they matter: the</span>
+<span class="c1">#: open-shell reference changes only open-shell calculations, and those are told</span>
+<span class="c1">#: apart by their components' fingerprints, which the composite's fingerprint</span>
+<span class="c1">#: includes. Left out, it changes nothing for closed-shell species, whose results</span>
+<span class="c1">#: stay reusable when a recipe adds it.</span>
+<span class="n">FINGERPRINT_EXCLUDED</span> <span class="o">=</span> <span class="n">DESCRIPTIVE</span> <span class="o">|</span> <span class="p">{</span><span class="s2">"open_shell_reference"</span><span class="p">}</span>
+
 <span class="c1">#: The fields of a component (one ordinary single point at the recipe's geometry).</span>
 <span class="n">COMPONENT_FIELDS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"level"</span><span class="p">,</span>  <span class="c1"># a complete model chemistry, e.g. ORCA:DFT@PBE0/def2-TZVP</span>
     <span class="s2">"method"</span><span class="p">,</span>  <span class="c1"># or method + basis, run on the recipe's code</span>
     <span class="s2">"basis"</span><span class="p">,</span>
     <span class="s2">"code"</span><span class="p">,</span>  <span class="c1"># an explicit per-component override of the recipe's code</span>
-    <span class="s2">"reference"</span><span class="p">,</span>  <span class="c1"># RHF, UHF, ROHF</span>
+    <span class="s2">"reference"</span><span class="p">,</span>  <span class="c1"># open-shell species: UHF or QRO (overrides open_shell_reference)</span>
     <span class="s2">"frozen_core"</span><span class="p">,</span>
     <span class="s2">"density_fitting"</span><span class="p">,</span>
     <span class="s2">"relativistic"</span><span class="p">,</span>
@@ -1117,7 +1125,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">fingerprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component_fingerprints</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""A hash of the normalized recipe (its descriptive fields left out),</span>
 <span class="sd">        and of the components' own fingerprints when given."""</span>
-        <span class="n">normal</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DESCRIPTIVE</span><span class="p">}</span>
+        <span class="n">normal</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">FINGERPRINT_EXCLUDED</span><span class="p">}</span>
         <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"recipe"</span><span class="p">:</span> <span class="n">normal</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">component_fingerprints</span><span class="p">:</span>
             <span class="n">payload</span><span class="p">[</span><span class="s2">"components"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">component_fingerprints</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
@@ -1210,7 +1218,7 @@
             <span class="p">)</span>
 
     <span class="n">_check_core_and_relativity</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">components</span><span class="p">)</span>
-    <span class="n">_check_subtracted_pairs</span><span class="p">(</span><span class="n">statements</span><span class="p">,</span> <span class="n">components</span><span class="p">)</span>
+    <span class="n">_check_subtracted_pairs</span><span class="p">(</span><span class="n">statements</span><span class="p">,</span> <span class="n">_with_references</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">components</span><span class="p">))</span>
 
     <span class="c1"># An F12 component split into hf_part + corr_part must account for its CABS</span>
     <span class="c1"># singles, which belong to neither</span>
@@ -1242,9 +1250,47 @@
 <span class="n">FROZEN_CORE_SPECIAL</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">)</span>
 
 
+<span class="c1">#: The references open-shell components can use: unrestricted Hartree-Fock, or</span>
+<span class="c1">#: quasi-restricted orbitals built from it (ROHF is refused by ORCA's canonical</span>
+<span class="c1">#: coupled cluster). Closed-shell components are not affected.</span>
+<span class="n">OPEN_SHELL_REFERENCES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"UHF"</span><span class="p">,</span> <span class="s2">"QRO"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="effective_reference">
+<a class="viewcode-back" href="../../api/composite_step.html#composite_step.recipes.effective_reference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">effective_reference</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">comp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The open-shell reference a component runs with: its own ``reference``, else</span>
+<span class="sd">    the recipe's ``open_shell_reference``, else None (the program's default)."""</span>
+    <span class="k">return</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reference"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"open_shell_reference"</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_with_references</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">components</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The components with their effective open-shell reference filled in, so that</span>
+<span class="sd">    the pair check compares what actually runs."""</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">effective_reference</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">)</span> <span class="k">if</span> <span class="n">ref</span> <span class="k">else</span> <span class="n">comp</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_core_and_relativity</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">components</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""The frozen-core sets (orbitals per element) and each component's frozen</span>
-<span class="sd">    core, relativistic Hamiltonian and nucleus model."""</span>
+<span class="w">    </span><span class="sd">"""The frozen-core sets (orbitals per element), the open-shell reference and</span>
+<span class="sd">    each component's frozen core, relativistic Hamiltonian and nucleus model."""</span>
+    <span class="n">ref</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"open_shell_reference"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">OPEN_SHELL_REFERENCES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"open_shell_reference must be one of </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OPEN_SHELL_REFERENCES</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">ref</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">cname</span><span class="p">,</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reference"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">OPEN_SHELL_REFERENCES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The component '</span><span class="si">{</span><span class="n">cname</span><span class="si">}</span><span class="s2">': reference must be one of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OPEN_SHELL_REFERENCES</span><span class="p">)</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">ref</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
     <span class="n">sets</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core_definitions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">RecipeError</span><span class="p">(</span><span class="s2">"'frozen_core_definitions' must be a mapping of name: set"</span><span class="p">)</span>
@@ -1379,10 +1425,19 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">component_settings</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">comp</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The settings a component's program is given beyond its level --</span>
 <span class="sd">    ``frozen_core`` (orbitals per element, "none" or "default"), ``relativistic``</span>
-<span class="sd">    and ``nucleus`` -- and a label for the level that tells them apart, so two</span>
-<span class="sd">    components of one level (all electrons and frozen core) are never mixed up."""</span>
+<span class="sd">    and ``nucleus``, and the open-shell ``reference`` -- and a label for the level</span>
+<span class="sd">    that tells them apart, so two components of one level (all electrons and frozen</span>
+<span class="sd">    core) are never mixed up.</span>
+
+<span class="sd">    The reference is not in the label: it changes nothing for closed-shell species,</span>
+<span class="sd">    whose calculations stay the same (and reusable) whatever a recipe says, and for</span>
+<span class="sd">    open-shell species the settings fingerprint of the calculation tells UHF and QRO</span>
+<span class="sd">    apart."""</span>
     <span class="n">settings</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">label</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ref</span> <span class="o">=</span> <span class="n">effective_reference</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ref</span><span class="p">:</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s2">"reference"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref</span>
     <span class="n">fc</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">fc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sets</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core_definitions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
