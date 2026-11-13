@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.11.12.3 -- Quasi-restricted orbitals for open-shell species
+    * Recipes can say which reference their correlated components use for
+      open-shell species, ``open_shell_reference: QRO`` (quasi-restricted orbitals)
+      or ``UHF``, and a component can override it. Both halves of a difference
+      must use the same reference.
+    * The three tier-A recipes use QRO. Closed-shell species are not affected: their
+      calculations, fingerprints and stored results are unchanged.
+    * Needs orca-step 2026.11.12.2 or later for QRO.
+
 2026.11.12.2 -- Core-valence and relativistic corrections, and the tier-A recipes
     * Recipe components can be given their frozen core (named sets of frozen
       orbitals per element), a scalar-relativistic Hamiltonian with its nucleus

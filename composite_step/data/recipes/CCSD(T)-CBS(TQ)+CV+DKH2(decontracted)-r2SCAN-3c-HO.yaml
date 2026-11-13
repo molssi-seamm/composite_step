@@ -14,6 +14,7 @@ reference: >-
   After W4 (Karton, Rabinovich, Martin, Ruscic, J. Chem. Phys. 125, 144108
   (2006)) without its F12 and post-CCSD(T) steps. The nucleus model is point:
   our explicit choice; W4 does not state one.
+open_shell_reference: QRO
 geometry:
   level: ORCA:CMP@R2SCAN-3C
 frequencies:

@@ -122,6 +122,9 @@ def component_mc(recipe, source, available=None):
     mc = resolve_level(level, available)
     comp = recipe.geometry if source == GEOMETRY else recipe.components[source]
     settings, label = component_settings(recipe, comp)
+    if source == GEOMETRY and "reference" not in comp:
+        # The recipe's open-shell reference is for its correlated components
+        settings.pop("reference", None)
     options = mc.get("options") or {}
     capabilities = options.get("capabilities")
     problems = []
@@ -139,6 +142,9 @@ def component_mc(recipe, source, available=None):
                     problems.append(f"it cannot take a {kind} frozen core")
             if settings.get("decontract") and not capabilities.get("decontract"):
                 problems.append("it cannot decontract the basis")
+            ref = settings.get("reference")
+            if ref is not None and ref not in capabilities.get("reference", ()):
+                problems.append(f"it cannot use a {ref} reference for open shells")
             rel = settings.get("relativistic")
             if rel is not None:
                 if rel not in capabilities.get("relativistic", ()):
